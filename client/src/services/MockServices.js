@@ -136,10 +136,20 @@ const seedData = () => {
 
 seedData();
 
-// Dynamic Helper to detect mode
-const getMode = () => localStorage.getItem('sleep_clarity_connection_mode') || 'fullstack';
+const getMode = () => {
+  let mode = localStorage.getItem('sleep_clarity_connection_mode');
+  if (!mode) {
+    mode = 'fullstack';
+    localStorage.setItem('sleep_clarity_connection_mode', mode);
+  }
+  return mode;
+};
 const getEndpoint = (path) => {
-  const host = localStorage.getItem('sleep_clarity_server_url') || 'https://sleep-clarity-api.onrender.com';
+  let host = localStorage.getItem('sleep_clarity_server_url');
+  if (!host || (host.includes('localhost') && window.location.hostname !== 'localhost')) {
+    host = 'https://sleep-clarity-api.onrender.com';
+    localStorage.setItem('sleep_clarity_server_url', host);
+  }
   return `${host}${path}`;
 };
 const getHeaders = () => {
