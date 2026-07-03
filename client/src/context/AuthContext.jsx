@@ -165,6 +165,12 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const sendPasswordReset = async (email) => {
+    if (auth.sendPasswordResetEmail) {
+      await auth.sendPasswordResetEmail(email);
+    }
+  };
+
   const value = {
     user,
     profile,
@@ -181,6 +187,7 @@ export const AuthProvider = ({ children }) => {
     sendVerificationEmail,
     reloadUser,
     updateUserPassword,
+    sendPasswordReset,
   };
 
   return (

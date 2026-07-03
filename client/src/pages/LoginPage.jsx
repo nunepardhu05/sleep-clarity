@@ -5,7 +5,7 @@ import { MockServices } from '../services/MockServices';
 import { Moon, Shield, ArrowRight, Smartphone, Clock, Sparkles, Eye, EyeOff } from 'lucide-react';
 
 const LoginPage = () => {
-  const { user, profile, sendOTP, loginWithEmail, registerWithEmail, onboardUser, isMockMode, sendVerificationEmail, reloadUser, logout, updateUserPassword } = useAuth();
+  const { user, profile, sendOTP, loginWithEmail, registerWithEmail, onboardUser, isMockMode, sendVerificationEmail, reloadUser, logout, updateUserPassword, sendPasswordReset } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -147,6 +147,24 @@ const LoginPage = () => {
       setResendCooldown(60); // 60 seconds cooldown timer
     } catch (err) {
       setError(err.message || 'Failed to resend verification email.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    if (!email) {
+      setError("Please go back and enter your email address first.");
+      return;
+    }
+    setLoading(true);
+    setError('');
+    try {
+      await sendPasswordReset(email);
+      setError(`A password reset link has been sent to ${email}. Check your inbox/spam folder.`);
+      alert(`Password reset link sent to ${email}! Click the link inside the email to choose a new password, then return here to sign in.`);
+    } catch (err) {
+      setError(err.message || 'Failed to send password reset email.');
     } finally {
       setLoading(false);
     }
@@ -331,8 +349,20 @@ const LoginPage = () => {
                       </button>
                     </div>
 
-                    <div className="relative">
-                      <label className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 block mb-1.5 uppercase tracking-wider">Password</label>
+                    <div>
+                      <div className="flex justify-between items-center mb-1.5">
+                        <label className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Password</label>
+                        {!isSignUp && (
+                          <button
+                            type="button"
+                            onClick={handleForgotPassword}
+                            disabled={loading}
+                            className="text-[10px] font-bold text-indigoCalm-600 dark:text-indigoCalm-400 hover:underline"
+                          >
+                            Forgot Password?
+                          </button>
+                        )}
+                      </div>
                       <div className="relative">
                         <input
                           type={showPassword ? 'text' : 'password'}

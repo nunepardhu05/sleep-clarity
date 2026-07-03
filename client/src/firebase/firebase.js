@@ -1,6 +1,6 @@
 // firebase.js - Real-Time Firebase Auth Connector with Mock Simulation Fallback
 import { initializeApp } from 'firebase/app';
-import { getAuth, RecaptchaVerifier, signInWithPhoneNumber as firebaseSignIn, signInWithEmailAndPassword as firebaseSignInWithEmail, createUserWithEmailAndPassword as firebaseCreateUserWithEmail, sendEmailVerification, reload, updatePassword } from 'firebase/auth';
+import { getAuth, RecaptchaVerifier, signInWithPhoneNumber as firebaseSignIn, signInWithEmailAndPassword as firebaseSignInWithEmail, createUserWithEmailAndPassword as firebaseCreateUserWithEmail, sendEmailVerification, reload, updatePassword, sendPasswordResetEmail } from 'firebase/auth';
 
 
 let auth = null;
@@ -174,6 +174,11 @@ class MockAuthInstance {
     }
     return Promise.resolve();
   }
+
+  async sendPasswordResetEmail(email) {
+    console.log(`[Mock Mode] Password reset email sent to: ${email}`);
+    return Promise.resolve();
+  }
 }
 
 const hasFirebaseKeys = 
@@ -241,6 +246,9 @@ if (hasFirebaseKeys) {
         if (fbAuth.currentUser) {
           await updatePassword(fbAuth.currentUser, password);
         }
+      },
+      sendPasswordResetEmail: (email) => {
+        return sendPasswordResetEmail(fbAuth, email);
       }
     };
     
