@@ -8,12 +8,12 @@ let isMockMode = true;
 
 // 1. Firebase configuration credentials template
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || localStorage.getItem('sleep_clarity_firebase_api_key'),
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || localStorage.getItem('sleep_clarity_firebase_auth_domain'),
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || localStorage.getItem('sleep_clarity_firebase_project_id'),
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || localStorage.getItem('sleep_clarity_firebase_api_key') || 'AIzaSyCabQFVZgIUz-ZFi0MDl7Lt--ru7MM-434',
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || localStorage.getItem('sleep_clarity_firebase_auth_domain') || 'sleepclarity-d5f88.firebaseapp.com',
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || localStorage.getItem('sleep_clarity_firebase_project_id') || 'sleepclarity-d5f88',
   storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || 'sleep-clarity-mock.appspot.com',
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '1234567890',
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || '1:1234567890:web:123456'
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '794204766838',
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || '1:794204766838:web:623e26e193dbbac08f9557'
 };
 
 // 2. Mock Auth Class for fallback sandbox operations

@@ -12,7 +12,7 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState(null);
   const [backendMode, setBackendMode] = useState(() => {
-    return localStorage.getItem('sleep_clarity_connection_mode') || 'offline'; // offline or fullstack
+    return localStorage.getItem('sleep_clarity_connection_mode') || 'fullstack'; // offline or fullstack
   });
 
   // Track Auth state changes

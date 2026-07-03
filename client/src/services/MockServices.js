@@ -137,9 +137,9 @@ const seedData = () => {
 seedData();
 
 // Dynamic Helper to detect mode
-const getMode = () => localStorage.getItem('sleep_clarity_connection_mode') || 'offline';
+const getMode = () => localStorage.getItem('sleep_clarity_connection_mode') || 'fullstack';
 const getEndpoint = (path) => {
-  const host = 'http://localhost:5000'; // Default server URL
+  const host = localStorage.getItem('sleep_clarity_server_url') || 'https://sleep-clarity-api.onrender.com';
   return `${host}${path}`;
 };
 const getHeaders = () => {
