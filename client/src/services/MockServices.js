@@ -577,21 +577,26 @@ export const MockServices = {
   },
 
   resetAllData: () => {
+    const currentProfile = JSON.parse(localStorage.getItem(KEYS.PROFILE) || '{}');
+    const name = currentProfile.name || 'User';
+    const sleepTime = currentProfile.sleepTime || '23:00';
+    const wakeTime = currentProfile.wakeTime || '07:00';
+    const phone = currentProfile.phone || '';
+    const email = currentProfile.email || '';
+
     localStorage.removeItem(KEYS.TASKS);
     localStorage.removeItem(KEYS.JOURNALS);
     localStorage.removeItem(KEYS.CHAT);
-    localStorage.removeItem(KEYS.PROFILE);
-    localStorage.setItem('sleep_clarity_demo_seeded', 'true');
     
-    // Seed fresh clean profile
     localStorage.setItem(KEYS.PROFILE, JSON.stringify({
-      name: 'Fresh User',
-      sleepTime: '23:00',
-      wakeTime: '07:00',
-      goal: 'Manage schedule and sleep on time.',
+      name,
+      sleepTime,
+      wakeTime,
+      goal: '',
       streak: 0,
       lastActive: new Date().toISOString().split('T')[0],
-      phone: '',
+      phone,
+      email
     }));
     
     window.location.reload();

@@ -60,30 +60,6 @@ const SettingsPage = () => {
     }
   };
 
-  const handleDeleteAccount = async () => {
-    if (window.confirm("WARNING: Are you sure you want to permanently delete your account? This will erase all your tasks, reflections, settings, and delete your login credentials. This action cannot be undone.")) {
-      try {
-        // Delete from backend database
-        await MockServices.deleteAccount();
-        
-        // Delete from Firebase Auth
-        if (user && typeof user.delete === 'function') {
-          await user.delete();
-        }
-        
-        // Reset all local cache data
-        MockServices.resetAllData();
-        
-        // Log out and redirect
-        await logout();
-        navigate('/');
-      } catch (err) {
-        console.error("Account delete error:", err);
-        alert(err.message || "Failed to delete account. For security reasons, you may need to sign out and sign in again before deleting your account.");
-      }
-    }
-  };
-
   const handleProfileSave = (e) => {
     e.preventDefault();
     if (!name.trim() || !goal.trim()) return;
@@ -364,23 +340,6 @@ const SettingsPage = () => {
                   </span>
                 )}
               </div>
-            </div>
-
-            {/* Delete Account Block */}
-            <div className="p-4 bg-red-500/5 border border-red-500/20 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <div className="space-y-1 text-left">
-                <span className="font-bold text-xs block text-red-600 dark:text-red-400">Permanently Delete Account</span>
-                <p className="text-[10px] text-slate-450 dark:text-slate-500 font-light max-w-md leading-relaxed">
-                  Permanently delete your profile, database records, and login credentials. This action is irreversible.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={handleDeleteAccount}
-                className="px-4 py-2 bg-red-650 hover:bg-red-700 text-white rounded-xl text-xs font-bold transition-colors"
-              >
-                Delete Account
-              </button>
             </div>
           </div>
         </div>
