@@ -2,6 +2,8 @@
 const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
+const Task = require('../models/Task');
+const Journal = require('../models/Journal');
 const verifyToken = require('../middleware/auth');
 
 // GET user profile
@@ -67,6 +69,19 @@ router.post('/streak', verifyToken, async (req, res) => {
     }
 
     res.json({ streak: user.streak });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// DELETE user profile & associated data
+router.delete('/profile', verifyToken, async (req, res) => {
+  try {
+    const firebaseUid = req.user.uid;
+    await User.findOneAndDelete({ firebaseUid });
+    await Task.deleteMany({ firebaseUid });
+    await Journal.deleteMany({ firebaseUid });
+    res.json({ success: true, message: 'User profile and all associated data deleted successfully.' });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

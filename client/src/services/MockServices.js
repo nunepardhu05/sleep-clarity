@@ -192,6 +192,20 @@ export const MockServices = {
     return profileData;
   },
 
+  deleteAccount: async () => {
+    if (getMode() === 'fullstack') {
+      const response = await fetch(getEndpoint('/api/users/profile'), {
+        method: 'DELETE',
+        headers: getHeaders()
+      });
+      if (!response.ok) {
+        throw new Error('Failed to delete account on database server.');
+      }
+      return await response.json();
+    }
+    return { success: true };
+  },
+
   incrementStreak: () => {
     const profile = MockServices.getProfile();
     const todayStr = new Date().toISOString().split('T')[0];

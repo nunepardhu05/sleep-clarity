@@ -1,15 +1,17 @@
-// SettingsPage.jsx - Profile Edit, Notification Targets, and Connection Mode Configuration
+// SettingsPage.jsx - Profile Edit and Notification Targets Configuration
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { MockServices } from '../services/MockServices';
 import { 
-  User, Bell, Database, Check, Clock, ShieldAlert, Sparkles, Smartphone
+  User, Bell, Check, Clock, Trash2
 } from 'lucide-react';
 
 const SettingsPage = () => {
-  const { profile, updateProfile, backendMode, toggleConnectionMode } = useAuth();
+  const { user, logout, profile, updateProfile } = useAuth();
   const { language, changeLanguage, t } = useLanguage();
+  const navigate = useNavigate();
 
   const [name, setName] = useState(profile?.name || '');
   const [sleepTime, setSleepTime] = useState(profile?.sleepTime || '23:00');
@@ -40,12 +42,29 @@ const SettingsPage = () => {
   });
   const [savedNotifs, setSavedNotifs] = useState(false);
 
-  // Server states
-  const [serverUrl, setServerUrl] = useState(() => localStorage.getItem('sleep_clarity_server_url') || 'http://localhost:5000');
-  const [firebaseApiKey, setFirebaseApiKey] = useState(() => localStorage.getItem('sleep_clarity_firebase_api_key') || '');
-  const [firebaseAuthDomain, setFirebaseAuthDomain] = useState(() => localStorage.getItem('sleep_clarity_firebase_auth_domain') || '');
-  const [firebaseProjectId, setFirebaseProjectId] = useState(() => localStorage.getItem('sleep_clarity_firebase_project_id') || '');
-  const [savedConnection, setSavedConnection] = useState(false);
+  const handleDeleteAccount = async () => {
+    if (window.confirm("WARNING: Are you sure you want to permanently delete your account? This will erase all your tasks, reflections, settings, and delete your login credentials. This action cannot be undone.")) {
+      try {
+        // Delete from backend database
+        await MockServices.deleteAccount();
+        
+        // Delete from Firebase Auth
+        if (user && typeof user.delete === 'function') {
+          await user.delete();
+        }
+        
+        // Reset all local cache data
+        MockServices.resetAllData();
+        
+        // Log out and redirect
+        await logout();
+        navigate('/');
+      } catch (err) {
+        console.error("Account delete error:", err);
+        alert(err.message || "Failed to delete account. For security reasons, you may need to sign out and sign in again before deleting your account.");
+      }
+    }
+  };
 
   const handleProfileSave = (e) => {
     e.preventDefault();
@@ -65,19 +84,6 @@ const SettingsPage = () => {
     localStorage.setItem(`sleep_clarity_${uid}_notif_journal`, notifJournal);
     setSavedNotifs(true);
     setTimeout(() => setSavedNotifs(false), 2000);
-  };
-
-  const handleConnectionSave = (e) => {
-    e.preventDefault();
-    localStorage.setItem('sleep_clarity_server_url', serverUrl);
-    localStorage.setItem('sleep_clarity_firebase_api_key', firebaseApiKey);
-    localStorage.setItem('sleep_clarity_firebase_auth_domain', firebaseAuthDomain);
-    localStorage.setItem('sleep_clarity_firebase_project_id', firebaseProjectId);
-    setSavedConnection(true);
-    setTimeout(() => {
-      setSavedConnection(false);
-      window.location.reload();
-    }, 1000);
   };
 
   // Browser Notification Test Trigger
@@ -310,126 +316,21 @@ const SettingsPage = () => {
           </form>
         </div>
 
-        {/* 3. DUAL CONNECTION MODULE */}
-        <div className="glass rounded-3xl p-6 border border-slate-200 dark:border-slate-800/80">
-          <div className="flex items-center gap-2.5 mb-6">
-            <Database className="w-5 h-5 text-purple-400" />
-            <h3 className="font-display font-bold text-base">Backend & Server Config</h3>
-          </div>
-
-          <form onSubmit={handleConnectionSave} className="space-y-4">
-            <div className="p-4 bg-indigoCalm-500/5 dark:bg-indigoCalm-500/5 border border-indigoCalm-500/10 rounded-2xl flex gap-3 text-xs mb-2">
-              <ShieldAlert className="w-5 h-5 text-indigoCalm-500 flex-shrink-0 mt-0.5" />
-              <div className="space-y-1">
-                <span className="font-bold text-slate-700 dark:text-slate-300">Dual Mode System Status:</span>
-                <p className="text-slate-400 font-light leading-relaxed">
-                  Currently running in <span className="font-bold text-indigoCalm-500 underline">{backendMode.toUpperCase()}</span>. In Offline mode, all tasks, notes, and AI responses are managed safely in your local sandbox. Switch to Full-Stack to sync data with your live Express backend.
-                </p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider block mb-1">{t('connectionState')}</label>
-                <select
-                  value={backendMode}
-                  onChange={(e) => toggleConnectionMode(e.target.value)}
-                  className="w-full px-3 py-2 bg-white dark:bg-[#12162a] border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-semibold focus:outline-hidden"
-                >
-                  <option value="offline">Offline / Mock Mode (LocalStorage + Local AI)</option>
-                  <option value="fullstack">Full-Stack Mode (Express Server Sync)</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider block mb-1">{t('serverUrl')}</label>
-                <input
-                  type="url"
-                  value={serverUrl}
-                  disabled={backendMode === 'offline'}
-                  onChange={(e) => setServerUrl(e.target.value)}
-                  className="w-full px-3 py-2 bg-white dark:bg-[#12162a] border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-medium disabled:opacity-40 focus:outline-hidden"
-                />
-              </div>
-            </div>
-
-            {backendMode === 'fullstack' && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 page-fade-in">
-                <div>
-                  <label className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider block mb-1 flex items-center gap-1">
-                    <Sparkles className="w-3.5 h-3.5 text-dawn-500" /> {t('firebaseApiKey')}
-                  </label>
-                  <input
-                    type="password"
-                    placeholder="AIzaSy..."
-                    value={firebaseApiKey}
-                    onChange={(e) => setFirebaseApiKey(e.target.value)}
-                    className="w-full px-3 py-2 bg-white dark:bg-[#12162a] border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-semibold focus:outline-hidden"
-                  />
-                </div>
-                <div>
-                  <label className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider block mb-1">
-                    {t('firebaseAuthDomain')}
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="project-id.firebaseapp.com"
-                    value={firebaseAuthDomain}
-                    onChange={(e) => setFirebaseAuthDomain(e.target.value)}
-                    className="w-full px-3 py-2 bg-white dark:bg-[#12162a] border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-semibold focus:outline-hidden"
-                  />
-                </div>
-                <div>
-                  <label className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider block mb-1">
-                    {t('firebaseProjectId')}
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="project-id-1234"
-                    value={firebaseProjectId}
-                    onChange={(e) => setFirebaseProjectId(e.target.value)}
-                    className="w-full px-3 py-2 bg-white dark:bg-[#12162a] border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-semibold focus:outline-hidden"
-                  />
-                </div>
-              </div>
-            )}
-
-            <div className="flex items-center gap-4">
-              <button
-                type="submit"
-                disabled={backendMode === 'offline'}
-                className="px-4 py-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl text-xs font-bold hover:bg-slate-800 dark:hover:bg-slate-100 transition-colors disabled:opacity-40"
-              >
-                {t('syncServer')}
-              </button>
-              {savedConnection && (
-                <span className="text-xs text-green-500 flex items-center gap-1 font-semibold">
-                  <Check className="w-4 h-4" /> Connection Saved
-                </span>
-              )}
-            </div>
-          </form>
-        </div>
-
-        {/* 4. DANGER ZONE */}
+        {/* 3. DELETE ACCOUNT */}
         <div className="glass rounded-3xl p-6 border border-red-500/25 dark:border-red-500/15 bg-red-500/5 dark:bg-red-500/5">
           <div className="flex items-center gap-2.5 mb-4">
-            <span className="text-red-500 text-lg">⚠️</span>
-            <h3 className="font-display font-bold text-base text-red-600 dark:text-red-400">Danger Zone</h3>
+            <Trash2 className="w-5 h-5 text-red-500" />
+            <h3 className="font-display font-bold text-base text-red-600 dark:text-red-400">Delete Account</h3>
           </div>
           <p className="text-xs text-slate-500 dark:text-slate-400 mb-4 font-light leading-relaxed">
-            Clicking reset will wipe out your local database cache (all tasks, journals, and chat logs) and start you with a completely clean slate. This action is irreversible.
+            Permanently delete your account and all associated user data, including tasks, reflections, and planning targets. This action is irreversible and will delete your credentials.
           </p>
           <button
             type="button"
-            onClick={() => {
-              if (window.confirm("Are you sure you want to delete all tasks, journals, and streaks? This will reset the application to a blank slate.")) {
-                MockServices.resetAllData();
-              }
-            }}
+            onClick={handleDeleteAccount}
             className="px-4 py-2 bg-red-650 hover:bg-red-700 text-white rounded-xl text-xs font-bold transition-colors"
           >
-            Reset Database & Start Fresh
+            Delete My Account Permanently
           </button>
         </div>
 
