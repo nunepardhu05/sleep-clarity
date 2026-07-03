@@ -146,7 +146,7 @@ const getMode = () => {
 };
 const getEndpoint = (path) => {
   let host = localStorage.getItem('sleep_clarity_server_url');
-  if (!host || (host.includes('localhost') && window.location.hostname !== 'localhost')) {
+  if (!host || host.includes('localhost:5000')) {
     host = 'https://sleep-clarity-api.onrender.com';
     localStorage.setItem('sleep_clarity_server_url', host);
   }
