@@ -20,7 +20,7 @@ connectDB();
 app.use(cors({
   origin: '*', // Allow all cross-origin requests for offline workspace testing
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-User-UID']
 }));
 app.use(express.json());
 
