@@ -122,12 +122,12 @@ const SettingsPage = () => {
                 />
               </div>
               <div>
-                <label className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider block mb-1">Phone Number</label>
+                <label className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider block mb-1">Email Address</label>
                 <input
-                  type="text"
+                  type="email"
                   disabled
-                  value={profile?.phone || 'Mock Account'}
-                  className="w-full px-3 py-2 bg-slate-100 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-medium text-slate-400 focus:outline-hidden"
+                  value={user?.email || 'Guest Account'}
+                  className="w-full px-3 py-2 bg-slate-100 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-medium text-slate-450 focus:outline-hidden"
                 />
               </div>
             </div>
