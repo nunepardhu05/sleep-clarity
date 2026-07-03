@@ -80,7 +80,7 @@ router.delete('/data', verifyToken, async (req, res) => {
     const firebaseUid = req.user.uid;
     await Task.deleteMany({ userId: firebaseUid });
     await Journal.deleteMany({ userId: firebaseUid });
-    await User.findOneAndUpdate({ firebaseUid }, { streak: 0 });
+    await User.findOneAndUpdate({ firebaseUid }, { streak: 0, goal: '' });
     res.json({ success: true, message: 'All user tasks and journal logs cleared successfully.' });
   } catch (error) {
     res.status(500).json({ error: error.message });
