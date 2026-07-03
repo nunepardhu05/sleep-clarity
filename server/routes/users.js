@@ -78,8 +78,8 @@ router.post('/streak', verifyToken, async (req, res) => {
 router.delete('/data', verifyToken, async (req, res) => {
   try {
     const firebaseUid = req.user.uid;
-    await Task.deleteMany({ firebaseUid });
-    await Journal.deleteMany({ firebaseUid });
+    await Task.deleteMany({ userId: firebaseUid });
+    await Journal.deleteMany({ userId: firebaseUid });
     await User.findOneAndUpdate({ firebaseUid }, { streak: 0 });
     res.json({ success: true, message: 'All user tasks and journal logs cleared successfully.' });
   } catch (error) {
@@ -92,8 +92,8 @@ router.delete('/profile', verifyToken, async (req, res) => {
   try {
     const firebaseUid = req.user.uid;
     await User.findOneAndDelete({ firebaseUid });
-    await Task.deleteMany({ firebaseUid });
-    await Journal.deleteMany({ firebaseUid });
+    await Task.deleteMany({ userId: firebaseUid });
+    await Journal.deleteMany({ userId: firebaseUid });
     res.json({ success: true, message: 'User profile and all associated data deleted successfully.' });
   } catch (error) {
     res.status(500).json({ error: error.message });
