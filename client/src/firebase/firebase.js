@@ -177,11 +177,9 @@ class MockAuthInstance {
 }
 
 const hasFirebaseKeys = 
-  (import.meta.env.VITE_FIREBASE_API_KEY && 
-   import.meta.env.VITE_FIREBASE_API_KEY !== 'PLACEHOLDER' &&
-   import.meta.env.VITE_FIREBASE_API_KEY !== '') ||
-  (localStorage.getItem('sleep_clarity_firebase_api_key') && 
-   localStorage.getItem('sleep_clarity_firebase_api_key') !== '');
+  firebaseConfig.apiKey && 
+  firebaseConfig.apiKey !== 'PLACEHOLDER' &&
+  firebaseConfig.apiKey !== '';
 
 if (hasFirebaseKeys) {
   try {
