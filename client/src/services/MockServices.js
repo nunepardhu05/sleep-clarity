@@ -204,6 +204,20 @@ export const MockServices = {
     return profileData;
   },
 
+  clearUserData: async () => {
+    if (getMode() === 'fullstack') {
+      const response = await fetch(getEndpoint('/api/users/data'), {
+        method: 'DELETE',
+        headers: getHeaders()
+      });
+      if (!response.ok) {
+        throw new Error('Failed to clear user data on database server.');
+      }
+      return await response.json();
+    }
+    return { success: true };
+  },
+
   deleteAccount: async () => {
     if (getMode() === 'fullstack') {
       const response = await fetch(getEndpoint('/api/users/profile'), {

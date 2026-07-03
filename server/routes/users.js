@@ -74,6 +74,19 @@ router.post('/streak', verifyToken, async (req, res) => {
   }
 });
 
+// DELETE user data only (keep profile and credentials active)
+router.delete('/data', verifyToken, async (req, res) => {
+  try {
+    const firebaseUid = req.user.uid;
+    await Task.deleteMany({ firebaseUid });
+    await Journal.deleteMany({ firebaseUid });
+    await User.findOneAndUpdate({ firebaseUid }, { streak: 0 });
+    res.json({ success: true, message: 'All user tasks and journal logs cleared successfully.' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // DELETE user profile & associated data
 router.delete('/profile', verifyToken, async (req, res) => {
   try {
