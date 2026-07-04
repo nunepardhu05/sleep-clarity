@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { 
   Moon, Sun, LayoutDashboard, CheckSquare, BookOpen, 
-  BarChart2, MessageSquare, Settings, LogOut, Menu, X, Bell, Flame, Calendar
+  BarChart2, MessageSquare, Settings, LogOut, Menu, X, Bell, Flame, Calendar, User
 } from 'lucide-react';
 
 const Layout = ({ children }) => {
@@ -160,7 +160,7 @@ const Layout = ({ children }) => {
     { nameKey: 'navCalendar', path: '/calendar', icon: Calendar },
     { nameKey: 'navJournal', path: '/journal', icon: BookOpen },
     { nameKey: 'navChat', path: '/chat', icon: MessageSquare },
-    { nameKey: 'navSettings', path: '/settings', icon: Settings },
+    { nameKey: 'navSettings', path: '/settings', icon: User },
   ];
 
   const handleLogout = async () => {

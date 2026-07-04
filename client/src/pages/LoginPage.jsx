@@ -268,6 +268,20 @@ const LoginPage = () => {
       return;
     }
 
+    // Validate 6-hour sleep difference
+    const getSleepDurationInHours = (sleep, wake) => {
+      const [sleepH, sleepM] = sleep.split(':').map(Number);
+      const [wakeH, wakeM] = wake.split(':').map(Number);
+      let diff = (wakeH * 60 + wakeM) - (sleepH * 60 + sleepM);
+      if (diff < 0) diff += 24 * 60;
+      return diff / 60;
+    };
+    const duration = getSleepDurationInHours(sleepTime, wakeTime);
+    if (duration < 6) {
+      setError('Sleep target and wake target difference must be at least 6 hours.');
+      return;
+    }
+
     setLoading(true);
     try {
       // Update password in authentication service

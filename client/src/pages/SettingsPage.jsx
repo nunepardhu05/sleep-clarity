@@ -18,10 +18,27 @@ const SettingsPage = () => {
   const [wakeTime, setWakeTime] = useState(profile?.wakeTime || '07:00');
   const [goal, setGoal] = useState(profile?.goal || '');
   const [savedProfile, setSavedProfile] = useState(false);
+  const [error, setError] = useState('');
 
   const handleProfileSave = (e) => {
     e.preventDefault();
+    setError('');
     if (!name.trim() || !goal.trim()) return;
+
+    // Validate 6-hour sleep target difference
+    const getSleepDurationInHours = (sleep, wake) => {
+      const [sleepH, sleepM] = sleep.split(':').map(Number);
+      const [wakeH, wakeM] = wake.split(':').map(Number);
+      let diff = (wakeH * 60 + wakeM) - (sleepH * 60 + sleepM);
+      if (diff < 0) diff += 24 * 60;
+      return diff / 60;
+    };
+
+    const duration = getSleepDurationInHours(sleepTime, wakeTime);
+    if (duration < 6) {
+      setError('Sleep target and wake target difference must be at least 6 hours.');
+      return;
+    }
 
     updateProfile({ name, sleepTime, wakeTime, goal });
     setSavedProfile(true);
@@ -51,6 +68,11 @@ const SettingsPage = () => {
           </div>
 
           <form onSubmit={handleProfileSave} className="space-y-4">
+            {error && (
+              <div className="p-3.5 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-500 text-xs font-semibold text-left">
+                {error}
+              </div>
+            )}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider block mb-1">{t('nameLabel')}</label>
