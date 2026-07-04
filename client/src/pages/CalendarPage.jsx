@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { MockServices } from '../services/MockServices';
 import { useLanguage } from '../context/LanguageContext';
+import { useAuth } from '../context/AuthContext';
 import { 
   ChevronLeft, ChevronRight, Plus, Clock, Calendar as CalIcon,
   Trash2, AlertCircle, BookOpen, Smile, Sparkles, Check
@@ -9,9 +10,11 @@ import {
 
 const CalendarPage = () => {
   const { t } = useLanguage();
+  const { profile } = useAuth();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDateStr, setSelectedDateStr] = useState(new Date().toISOString().split('T')[0]);
   const [tasks, setTasks] = useState([]);
+  const [error, setError] = useState('');
   
   // Form states
   const [title, setTitle] = useState('');
@@ -125,9 +128,60 @@ const CalendarPage = () => {
   const handleCreateEvent = (e) => {
     e.preventDefault();
     if (!title.trim()) return;
+    setError('');
 
     const finalStart = convert12To24(startHour, startMin, startPeriod);
     const finalEnd = convert12To24(endHour, endMin, endPeriod);
+
+    if (finalStart) {
+      const toMins = (t) => {
+        const [h, m] = t.split(':').map(Number);
+        return h * 60 + m;
+      };
+
+      const inSleep = (min, s, w) => {
+        if (s <= w) {
+          return min >= s && min < w;
+        } else {
+          return min >= s || min < w;
+        }
+      };
+
+      const sleepMins = toMins(profile?.sleepTime || '23:00');
+      const wakeMins = toMins(profile?.wakeTime || '07:00');
+      const startMins = toMins(finalStart);
+
+      if (inSleep(startMins, sleepMins, wakeMins)) {
+        setError('Cannot schedule tasks during your sleep time.');
+        return;
+      }
+
+      if (finalEnd) {
+        const endMins = toMins(finalEnd);
+        if (inSleep(endMins, sleepMins, wakeMins)) {
+          setError('Cannot schedule tasks during your sleep time.');
+          return;
+        }
+
+        let current = startMins;
+        const targetEnd = endMins;
+        let overlaps = false;
+        let limit = 1440 * 2;
+        let iterations = 0;
+        while (current !== targetEnd && iterations < limit) {
+          if (inSleep(current, sleepMins, wakeMins)) {
+            overlaps = true;
+            break;
+          }
+          current = (current + 1) % 1440;
+          iterations++;
+        }
+        if (overlaps) {
+          setError('Cannot schedule tasks during your sleep time.');
+          return;
+        }
+      }
+    }
 
     MockServices.addTask({
       title,
@@ -281,7 +335,10 @@ const CalendarPage = () => {
                 <span className="text-[10px] text-slate-400 dark:text-slate-500 uppercase tracking-widest font-bold">ALERTS INTEGRATED</span>
               </div>
               <button
-                onClick={() => setShowAddForm(!showAddForm)}
+                onClick={() => {
+                  setError('');
+                  setShowAddForm(!showAddForm);
+                }}
                 className="p-2 bg-indigoCalm-600 hover:bg-indigoCalm-750 text-white rounded-xl transition-all shadow-md shadow-indigoCalm-600/10 flex items-center justify-center gap-1.5 text-xs font-bold"
               >
                 <Plus className="w-4 h-4" /> {t('addTask')}
@@ -291,6 +348,11 @@ const CalendarPage = () => {
             {/* Dynamic event scheduler form */}
             {showAddForm && (
               <form onSubmit={handleCreateEvent} className="p-4 bg-slate-50 dark:bg-[#12162a]/60 border border-slate-200 dark:border-slate-850 rounded-2xl mb-5 space-y-4 page-fade-in text-left">
+                {error && (
+                  <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 text-xs font-semibold">
+                    {error}
+                  </div>
+                )}
                 <div>
                   <label className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider block mb-1">{t('title')}</label>
                   <input

@@ -8,7 +8,6 @@ const connectDB = require('./config/db');
 const userRoutes = require('./routes/users');
 const taskRoutes = require('./routes/tasks');
 const journalRoutes = require('./routes/journals');
-const aiRoutes = require('./routes/ai');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -28,7 +27,6 @@ app.use(express.json());
 app.use('/api/users', userRoutes);
 app.use('/api/tasks', taskRoutes);
 app.use('/api/journals', journalRoutes);
-app.use('/api/ai', aiRoutes);
 
 // Base Check-in route
 app.get('/', (req, res) => {

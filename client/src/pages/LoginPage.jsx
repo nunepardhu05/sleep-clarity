@@ -31,9 +31,20 @@ const LoginPage = () => {
 
   // Setup form states
   const [name, setName] = useState('');
-  const [sleepTime, setSleepTime] = useState('23:00');
-  const [wakeTime, setWakeTime] = useState('07:00');
+  const [sleepHour, setSleepHour] = useState('11');
+  const [sleepMin, setSleepMin] = useState('00');
+  const [sleepPeriod, setSleepPeriod] = useState('PM');
+  const [wakeHour, setWakeHour] = useState('07');
+  const [wakeMin, setWakeMin] = useState('00');
+  const [wakePeriod, setWakePeriod] = useState('AM');
   const [goal, setGoal] = useState('');
+
+  const convert12To24 = (h, m, p) => {
+    let hour = parseInt(h);
+    if (p === 'PM' && hour < 12) hour += 12;
+    if (p === 'AM' && hour === 12) hour = 0;
+    return `${hour.toString().padStart(2, '0')}:${m || '00'}`;
+  };
 
   const [resendCooldown, setResendCooldown] = useState(0);
   const [emailStage, setEmailStage] = useState('email'); // email, password
@@ -269,6 +280,9 @@ const LoginPage = () => {
     }
 
     // Validate 6-hour sleep difference
+    const finalSleep = convert12To24(sleepHour, sleepMin, sleepPeriod);
+    const finalWake = convert12To24(wakeHour, wakeMin, wakePeriod);
+
     const getSleepDurationInHours = (sleep, wake) => {
       const [sleepH, sleepM] = sleep.split(':').map(Number);
       const [wakeH, wakeM] = wake.split(':').map(Number);
@@ -276,7 +290,7 @@ const LoginPage = () => {
       if (diff < 0) diff += 24 * 60;
       return diff / 60;
     };
-    const duration = getSleepDurationInHours(sleepTime, wakeTime);
+    const duration = getSleepDurationInHours(finalSleep, finalWake);
     if (duration < 6) {
       setError('Sleep target and wake target difference must be at least 6 hours.');
       return;
@@ -288,7 +302,7 @@ const LoginPage = () => {
       await updateUserPassword(setupPassword);
       
       // Complete profile onboarding
-      onboardUser({ name, sleepTime, wakeTime, goal });
+      onboardUser({ name, sleepTime: finalSleep, wakeTime: finalWake, goal });
       
       localStorage.removeItem('sleep_clarity_temp_register_pass');
       navigate('/dashboard');
@@ -501,32 +515,75 @@ const LoginPage = () => {
                       onChange={(e) => setSetupConfirmPassword(e.target.value)}
                       className="w-full px-4 py-3 bg-white dark:bg-[#12162a] border border-slate-200 dark:border-slate-800 rounded-xl text-sm font-medium focus:outline-hidden focus:ring-2 focus:ring-indigoCalm-500/40"
                     />
-                  </div>
-                </div>
-
-                {/* Sleep & Wake Times */}
-                <div className="grid grid-cols-2 gap-4">
+                 {/* Sleep & Wake Times */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 block mb-1.5 uppercase tracking-wider flex items-center gap-1">
                       <Clock className="w-3.5 h-3.5" /> Sleep Time
                     </label>
-                    <input
-                      type="time"
-                      value={sleepTime}
-                      onChange={(e) => setSleepTime(e.target.value)}
-                      className="w-full px-4 py-3 bg-white dark:bg-[#12162a] border border-slate-200 dark:border-slate-800 rounded-xl text-sm font-semibold focus:outline-hidden"
-                    />
+                    <div className="flex gap-1">
+                      <select
+                        value={sleepHour}
+                        onChange={(e) => setSleepHour(e.target.value)}
+                        className="flex-1 px-2.5 py-3 bg-white dark:bg-[#12162a] border border-slate-200 dark:border-slate-800 rounded-xl text-sm font-semibold focus:outline-hidden"
+                      >
+                        {Array.from({ length: 12 }, (_, i) => i + 1).map(h => (
+                          <option key={h} value={h}>{h}</option>
+                        ))}
+                      </select>
+                      <select
+                        value={sleepMin}
+                        onChange={(e) => setSleepMin(e.target.value)}
+                        className="flex-1 px-2.5 py-3 bg-white dark:bg-[#12162a] border border-slate-200 dark:border-slate-800 rounded-xl text-sm font-semibold focus:outline-hidden"
+                      >
+                        {Array.from({ length: 60 }, (_, i) => i.toString().padStart(2, '0')).map(m => (
+                          <option key={m} value={m}>{m}</option>
+                        ))}
+                      </select>
+                      <select
+                        value={sleepPeriod}
+                        onChange={(e) => setSleepPeriod(e.target.value)}
+                        className="px-2 py-3 bg-white dark:bg-[#12162a] border border-slate-200 dark:border-slate-800 rounded-xl text-sm font-semibold focus:outline-hidden"
+                      >
+                        <option value="AM">AM</option>
+                        <option value="PM">PM</option>
+                      </select>
+                    </div>
                   </div>
                   <div>
                     <label className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 block mb-1.5 uppercase tracking-wider flex items-center gap-1">
                       <Clock className="w-3.5 h-3.5" /> Wake-up Time
                     </label>
-                    <input
-                      type="time"
-                      value={wakeTime}
-                      onChange={(e) => setWakeTime(e.target.value)}
-                      className="w-full px-4 py-3 bg-white dark:bg-[#12162a] border border-slate-200 dark:border-slate-800 rounded-xl text-sm font-semibold focus:outline-hidden"
-                    />
+                    <div className="flex gap-1">
+                      <select
+                        value={wakeHour}
+                        onChange={(e) => setWakeHour(e.target.value)}
+                        className="flex-1 px-2.5 py-3 bg-white dark:bg-[#12162a] border border-slate-200 dark:border-slate-800 rounded-xl text-sm font-semibold focus:outline-hidden"
+                      >
+                        {Array.from({ length: 12 }, (_, i) => i + 1).map(h => (
+                          <option key={h} value={h}>{h}</option>
+                        ))}
+                      </select>
+                      <select
+                        value={wakeMin}
+                        onChange={(e) => setWakeMin(e.target.value)}
+                        className="flex-1 px-2.5 py-3 bg-white dark:bg-[#12162a] border border-slate-200 dark:border-slate-800 rounded-xl text-sm font-semibold focus:outline-hidden"
+                      >
+                        {Array.from({ length: 60 }, (_, i) => i.toString().padStart(2, '0')).map(m => (
+                          <option key={m} value={m}>{m}</option>
+                        ))}
+                      </select>
+                      <select
+                        value={wakePeriod}
+                        onChange={(e) => setWakePeriod(e.target.value)}
+                        className="px-2 py-3 bg-white dark:bg-[#12162a] border border-slate-200 dark:border-slate-800 rounded-xl text-sm font-semibold focus:outline-hidden"
+                      >
+                        <option value="AM">AM</option>
+                        <option value="PM">PM</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
                   </div>
                 </div>
 

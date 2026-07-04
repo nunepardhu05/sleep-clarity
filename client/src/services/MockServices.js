@@ -7,7 +7,6 @@ const KEYS = new Proxy({}, {
       TASKS: `sleep_clarity_${uid}_tasks`,
       JOURNALS: `sleep_clarity_${uid}_journals`,
       PROFILE: `sleep_clarity_${uid}_profile`,
-      CHAT: `sleep_clarity_${uid}_chat`,
     };
     return mapping[prop];
   }
@@ -115,22 +114,9 @@ const seedData = () => {
         content: 'Productive day today. Got the landing page layouts done and felt energized. Slept a bit late though, around 11:30 PM. Hope to sleep earlier tomorrow.',
         mood: 'motivated',
         date: yesterday,
-        aiAnalysis: 'Your entry shows high excitement and self-reflection. You are motivated but notice a slight struggle with bedtime boundaries. Celebrating your design wins while maintaining your 11 PM target will protect your focus!'
       }
     ];
     localStorage.setItem(KEYS.JOURNALS, JSON.stringify(initialJournals));
-  }
-
-  if (!localStorage.getItem(KEYS.CHAT)) {
-    const initialChat = [
-      {
-        id: 'm1',
-        sender: 'ai',
-        text: 'Hey there! I am your productivity companion. I help you map out your days, reflect before sleep, and keep your consistency high. How was your day today?',
-        timestamp: new Date(Date.now() - 3600000).toISOString(),
-      }
-    ];
-    localStorage.setItem(KEYS.CHAT, JSON.stringify(initialChat));
   }
 };
 
@@ -358,14 +344,11 @@ export const MockServices = {
     const todayStr = new Date().toISOString().split('T')[0];
     const existingIdx = all.findIndex(j => j.date === todayStr);
     
-    const aiAnalysis = MockServices.generateLocalAIJournalAnalysis(content, mood);
-    
     const entry = {
       id: existingIdx !== -1 ? all[existingIdx].id : `journal-${Date.now()}`,
       content,
       mood,
       date: todayStr,
-      aiAnalysis,
     };
 
     if (existingIdx !== -1) {
@@ -388,150 +371,7 @@ export const MockServices = {
     return entry;
   },
 
-  // LOCAL TONE ANALYSIS fallback
-  generateLocalAIJournalAnalysis: (content, mood) => {
-    const contentLower = content.toLowerCase();
-    let analysis = "";
-    
-    const moodResponses = {
-      happy: "It is wonderful to see you ending your day on such a high note! Experiencing gratitude and happiness helps consolidate positive memories. Keep up this energetic wavelength for tomorrow.",
-      tired: "You had a full, demanding day. Acknowledging physical and mental fatigue is a superpower. Rest is not a reward for productivity; it is the fuel for it. Sleep deep tonight.",
-      motivated: "Your drive is inspiring. There is a strong fire in your reflections. Just make sure to transition into a calm wind-down state before shut-eye so you do not carry active cognitive loops into your sleep.",
-      stressed: "It sounds like you carried a heavy weight today. Remember, you do not have to solve everything tonight. Exhale, leave today's worries on the page, and let sleep restore your perspective. You did your best.",
-      sad: "I'm sending you a big warm hug. It is completely okay to have down days. Processing these emotions by writing is highly courageous. Allow yourself to rest without judgment tonight.",
-    };
 
-    analysis += moodResponses[mood] || "Thank you for reflecting tonight. Putting thoughts into words is the first step of clarity.";
-
-    if (contentLower.includes("late") || contentLower.includes("sleep")) {
-      analysis += " I noticed you mentioned sleep timing. Remember to protect your wind-down window. Unplugging 30 minutes before sleep could work wonders.";
-    }
-    if (contentLower.includes("work") || contentLower.includes("code") || contentLower.includes("project")) {
-      analysis += " You poured significant mental capital into work today. Make sure tomorrow's plan has a distinct break to buffer your focus sessions.";
-    }
-
-    return analysis;
-  },
-
-  // LOCAL SCHEDULING ADVISOR
-  getAIPlanSuggestions: (dateStr) => {
-    const tasks = MockServices.getTasksByDate(dateStr);
-    if (tasks.length === 0) {
-      return ["No tasks scheduled yet. Take 5 minutes to write down your core focuses for tomorrow."];
-    }
-
-    const suggestions = [];
-    const highPriorityCount = tasks.filter(t => t.priority === 'high').length;
-    const workTasks = tasks.filter(t => t.category === 'work' || t.category === 'coding');
-    
-    if (tasks.length > 6) {
-      suggestions.push("Tomorrow looks heavily packed with " + tasks.length + " tasks. Consider trimming down to your Top 3 Essential Focuses.");
-    }
-    if (highPriorityCount > 2) {
-      suggestions.push("You've set " + highPriorityCount + " High Priority tasks. True prioritization means having only 1 or 2 absolute non-negotiables.");
-    }
-
-    let hasBackToBack = false;
-    const sorted = [...tasks].sort((a,b) => a.startTime.localeCompare(b.startTime));
-    for (let i = 0; i < sorted.length - 1; i++) {
-      if (sorted[i].endTime === sorted[i+1].startTime) {
-        hasBackToBack = true;
-        break;
-      }
-    }
-    if (hasBackToBack) {
-      suggestions.push("You have back-to-back blocks scheduled. Inserting a 15-minute buffer between tasks gives your brain time to reset.");
-    }
-
-    if (suggestions.length === 0) {
-      suggestions.push("Your schedule for tomorrow is beautifully balanced. Excellent work spacing out your priorities!");
-    }
-
-    return suggestions;
-  },
-
-  // COMPANION AI CHAT
-  getChatHistory: () => getFromStorage(KEYS.CHAT),
-
-  saveChatHistory: (history) => saveToStorage(KEYS.CHAT, history),
-
-  sendChatMessage: (userText) => {
-    const all = MockServices.getChatHistory();
-    const newUserMsg = {
-      id: `msg-${Date.now()}`,
-      sender: 'user',
-      text: userText,
-      timestamp: new Date().toISOString(),
-    };
-    all.push(newUserMsg);
-    MockServices.saveChatHistory(all);
-
-    let aiText = "";
-    
-    if (getMode() === 'fullstack') {
-      // In Full-stack mode, request real AI generation from the backend endpoint
-      fetch(getEndpoint('/api/ai/chat'), {
-        method: 'POST',
-        headers: getHeaders(),
-        body: JSON.stringify({ message: userText, chatHistory: all.slice(-5) })
-      })
-      .then(res => res.json())
-      .then(data => {
-        const newAiMsg = {
-          id: `msg-ai-${Date.now()}`,
-          sender: 'ai',
-          text: data.reply || "Connected backend failed to process response.",
-          timestamp: new Date().toISOString()
-        };
-        all.push(newAiMsg);
-        MockServices.saveChatHistory(all);
-      })
-      .catch(err => {
-        console.error("Server chat generation error:", err);
-      });
-    }
-
-    // Default immediate local generated response (acts as initial mock output or instant load)
-    aiText = MockServices.generateAICompanionReply(userText);
-    const newAiMsg = {
-      id: `msg-ai-${Date.now()}`,
-      sender: 'ai',
-      text: aiText,
-      timestamp: new Date(Date.now() + 500).toISOString(),
-    };
-    
-    all.push(newAiMsg);
-    MockServices.saveChatHistory(all);
-    return { userMsg: newUserMsg, aiMsg: newAiMsg };
-  },
-
-  generateAICompanionReply: (userText) => {
-    const textLower = userText.toLowerCase();
-    const profile = MockServices.getProfile();
-    const tasks = MockServices.getTasks();
-    const journals = MockServices.getJournals();
-    
-    const todayStr = new Date().toISOString().split('T')[0];
-    const tomorrowStr = new Date(Date.now() + 86400000).toISOString().split('T')[0];
-    const todayTasks = tasks.filter(t => t.date === todayStr);
-    const completedToday = todayTasks.filter(t => t.completed).length;
-    const totalToday = todayTasks.length;
-    const completionPercent = totalToday > 0 ? Math.round((completedToday / totalToday) * 100) : 0;
-
-    if (textLower.includes("hello") || textLower.includes("hi ") || textLower.includes("hey")) {
-      return `Hey ${profile.name}! Hope you are winding down nicely. How has your productivity and clarity been today?`;
-    }
-    if (textLower.includes("progress") || textLower.includes("how did i do") || textLower.includes("completion") || textLower.includes("my day") || textLower.includes("tasks")) {
-      if (totalToday === 0) {
-        return `You didn't schedule any tasks for today. No worries! Have you scheduled tomorrow's tasks yet? It helps clear your mind before sleeping.`;
-      }
-      return `Today you scheduled ${totalToday} tasks and completed ${completedToday} of them (${completionPercent}%). Let's make sure tomorrow is organized so you can wake up with absolute purpose!`;
-    }
-    if (textLower.includes("streak")) {
-      return `You are currently on a ${profile.streak}-day reflection streak! Keep it going tonight.`;
-    }
-    return `I completely get what you mean. Since we're wrapping up the day, my best recommendation is to review your tomorrow schedule, log a quick mood check in your journal, and let your brain fully recharge. Sleep with clarity, wake with purpose!`;
-  },
 
   syncFromBackend: async () => {
     if (getMode() !== 'fullstack') return;
@@ -586,7 +426,6 @@ export const MockServices = {
 
     localStorage.removeItem(KEYS.TASKS);
     localStorage.removeItem(KEYS.JOURNALS);
-    localStorage.removeItem(KEYS.CHAT);
     
     localStorage.setItem(KEYS.PROFILE, JSON.stringify({
       name,

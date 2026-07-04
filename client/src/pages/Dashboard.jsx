@@ -29,7 +29,6 @@ const Dashboard = () => {
   
   const [todayTasks, setTodayTasks] = useState([]);
   const [tomorrowTasks, setTomorrowTasks] = useState([]);
-  const [aiSuggestions, setAiSuggestions] = useState([]);
   const [quickTitle, setQuickTitle] = useState('');
   const [quickCategory, setQuickCategory] = useState('work');
   const [quickPriority, setQuickPriority] = useState('medium');
@@ -46,9 +45,7 @@ const Dashboard = () => {
     setTodayTasks(todayList);
     setTomorrowTasks(tomorrowList);
     
-    // AI suggestions are based on tomorrow's scheduled tasks
-    const suggestions = MockServices.getAIPlanSuggestions(tomorrowStr);
-    setAiSuggestions(suggestions);
+
 
     // Check if journal for today is written
     const journals = MockServices.getJournals();
@@ -136,7 +133,7 @@ const Dashboard = () => {
         <div className="flex flex-wrap gap-2.5">
           <div className="px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-850 flex items-center gap-2">
             <Clock className="w-4 h-4 text-indigoCalm-500" />
-            <span className="text-xs font-semibold">{t('wakeTarget')}: {profile?.wakeTime || '07:00'}</span>
+            <span className="text-xs font-semibold">{t('wakeTarget')}: {formatTimeTo12Hour(profile?.wakeTime || '07:00')}</span>
           </div>
           {journalCompleted ? (
             <div className="px-3.5 py-2 rounded-xl bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/20 flex items-center gap-2">
@@ -342,40 +339,10 @@ const Dashboard = () => {
 
         </div>
 
-        {/* Right Column: AI Companion Tips & Tomorrow Planning */}
+        {/* Right Column: Tomorrow Planning */}
         <div className="space-y-6">
           
-          {/* AI COMPANION INSIGHT CARD */}
-          <div className="glass rounded-3xl p-6 border border-indigoCalm-500/25 dark:border-indigoCalm-500/15 relative overflow-hidden bg-radial-gradient">
-            <div className="absolute right-[-20px] top-[-20px] w-24 h-24 bg-indigoCalm-500/10 rounded-full blur-2xl"></div>
-            
-            <div className="flex items-center gap-2 mb-4">
-              <Sparkles className="w-5 h-5 text-dawn-500" />
-              <span className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Companion Suggestions</span>
-            </div>
 
-            <div className="space-y-4">
-              {aiSuggestions.map((s, idx) => (
-                <div key={idx} className="flex gap-3 items-start">
-                  <div className="w-1.5 h-1.5 rounded-full bg-dawn-500 mt-2 flex-shrink-0"></div>
-                  <p className="text-xs md:text-sm text-slate-600 dark:text-slate-300 leading-relaxed font-medium italic">
-                    "{s}"
-                  </p>
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-6 pt-5 border-t border-slate-200 dark:border-slate-800/60 flex justify-between items-center">
-              <span className="text-[10px] text-slate-400 dark:text-slate-500">Tomorrow's Schedule analysis</span>
-              <Link 
-                to="/chat" 
-                className="text-[10px] font-bold text-indigoCalm-600 dark:text-indigoCalm-400 hover:underline uppercase flex items-center gap-1"
-              >
-                Chat with Buddy
-                <ArrowRight className="w-3 h-3" />
-              </Link>
-            </div>
-          </div>
 
           {/* TOMORROW QUICK PLANNING CARD */}
           <div className="glass rounded-3xl p-6 border border-slate-200 dark:border-slate-800/80">

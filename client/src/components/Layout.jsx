@@ -159,7 +159,6 @@ const Layout = ({ children }) => {
     { nameKey: 'todaysTasks', path: '/tasks', icon: CheckSquare },
     { nameKey: 'navCalendar', path: '/calendar', icon: Calendar },
     { nameKey: 'navJournal', path: '/journal', icon: BookOpen },
-    { nameKey: 'navChat', path: '/chat', icon: MessageSquare },
     { nameKey: 'navSettings', path: '/settings', icon: User },
   ];
 

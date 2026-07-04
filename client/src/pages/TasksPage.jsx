@@ -25,7 +25,7 @@ const TasksPage = () => {
   
   const [activeTab, setActiveTab] = useState('tomorrow'); // today or tomorrow (default tomorrow for pre-sleep planning)
   const [tasks, setTasks] = useState([]);
-  const [aiSuggestions, setAiSuggestions] = useState([]);
+  const [error, setError] = useState('');
   
   // Form states
   const [title, setTitle] = useState('');
@@ -73,18 +73,67 @@ const TasksPage = () => {
     list.sort((a, b) => a.startTime.localeCompare(b.startTime));
     setTasks(list);
 
-    // Load AI tips for this date
-    const tips = MockServices.getAIPlanSuggestions(targetDate);
-    setAiSuggestions(tips);
+
   };
 
   const handleCreateTask = (e) => {
     e.preventDefault();
     if (!title.trim()) return;
+    setError('');
 
     const targetDate = activeTab === 'today' ? todayStr : tomorrowStr;
     const finalStart = convert12To24(startHour, startMin, startPeriod);
     const finalEnd = convert12To24(endHour, endMin, endPeriod);
+
+    if (finalStart) {
+      const toMins = (t) => {
+        const [h, m] = t.split(':').map(Number);
+        return h * 60 + m;
+      };
+
+      const inSleep = (min, s, w) => {
+        if (s <= w) {
+          return min >= s && min < w;
+        } else {
+          return min >= s || min < w;
+        }
+      };
+
+      const sleepMins = toMins(profile?.sleepTime || '23:00');
+      const wakeMins = toMins(profile?.wakeTime || '07:00');
+      const startMins = toMins(finalStart);
+
+      if (inSleep(startMins, sleepMins, wakeMins)) {
+        setError('Cannot schedule tasks during your sleep time.');
+        return;
+      }
+
+      if (finalEnd) {
+        const endMins = toMins(finalEnd);
+        if (inSleep(endMins, sleepMins, wakeMins)) {
+          setError('Cannot schedule tasks during your sleep time.');
+          return;
+        }
+
+        let current = startMins;
+        const targetEnd = endMins;
+        let overlaps = false;
+        let limit = 1440 * 2;
+        let iterations = 0;
+        while (current !== targetEnd && iterations < limit) {
+          if (inSleep(current, sleepMins, wakeMins)) {
+            overlaps = true;
+            break;
+          }
+          current = (current + 1) % 1440;
+          iterations++;
+        }
+        if (overlaps) {
+          setError('Cannot schedule tasks during your sleep time.');
+          return;
+        }
+      }
+    }
 
     if (editingTask) {
       // Update existing
@@ -225,21 +274,6 @@ const TasksPage = () => {
         </div>
       </div>
 
-      {/* AI PLAN FEEDBACK WARNING BARS */}
-      {aiSuggestions.length > 0 && (
-        <div className="p-4 bg-indigoCalm-500/5 dark:bg-indigoCalm-500/5 border border-indigoCalm-500/15 rounded-2xl flex items-start gap-3">
-          <Sparkles className="w-5 h-5 text-dawn-500 flex-shrink-0 mt-0.5" />
-          <div className="space-y-1.5">
-            <span className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider block">Bedtime Planner Feedback</span>
-            {aiSuggestions.map((tip, idx) => (
-              <p key={idx} className="text-xs text-slate-500 dark:text-slate-300 italic font-medium leading-relaxed">
-                "{tip}"
-              </p>
-            ))}
-          </div>
-        </div>
-      )}
-
       {/* GRID CONTENT: LIST & FORM VS VISUAL TIMELINE */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         
@@ -254,6 +288,7 @@ const TasksPage = () => {
             <button
               onClick={() => {
                 setEditingTask(null);
+                setError('');
                 setShowAddForm(!showAddForm);
               }}
               className="px-3.5 py-1.5 bg-indigoCalm-600 hover:bg-indigoCalm-750 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5"
@@ -269,6 +304,12 @@ const TasksPage = () => {
               <h4 className="font-display font-bold text-sm text-indigoCalm-600 dark:text-indigoCalm-400">
                 {editingTask ? 'Edit Scheduled Task' : 'Schedule New Bedtime Task'}
               </h4>
+
+              {error && (
+                <div className="p-3.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 text-xs font-semibold">
+                  {error}
+                </div>
+              )}
 
               <div className="space-y-3">
                 {/* Title */}

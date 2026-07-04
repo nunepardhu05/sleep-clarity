@@ -48,7 +48,7 @@ const LandingPage = () => {
 
         {/* Hero description */}
         <p className="text-slate-500 dark:text-slate-400 text-base sm:text-xl max-w-2xl mb-10 leading-relaxed font-light">
-          Worrying about tomorrow ruins tonight's sleep. Plan your tasks, journal your thoughts, and review insights with an AI companion designed to help you declutter before bed.
+          Worrying about tomorrow ruins tonight's sleep. Plan your tasks, journal your thoughts, and organize your schedule to help you declutter before bed.
         </p>
 
         {/* CTA Buttons */}
@@ -105,18 +105,18 @@ const LandingPage = () => {
                 </div>
               </div>
 
-              {/* AI suggestion simulation */}
+              {/* Journal stats simulation */}
               <div className="bg-indigoCalm-500/5 border border-indigoCalm-500/10 rounded-xl p-4 flex flex-col justify-between">
                 <div>
                   <div className="flex items-center gap-2 mb-2">
                     <Star className="w-4 h-4 text-dawn-500 fill-dawn-500" />
-                    <span className="text-xs text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider">AI Companion Tip</span>
+                    <span className="text-xs text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider">Reflection Tracker</span>
                   </div>
                   <p className="text-sm italic text-slate-600 dark:text-indigoCalm-300 leading-relaxed font-medium">
-                    "Your scheduled focus blocks for tomorrow match your morning energy peaks perfectly. Make sure to step away from screens 30 minutes before your 23:00 target!"
+                    "Journaling tonight completed! Keeping your mind clear and your sleep quality high is the first step to a productive tomorrow."
                   </p>
                 </div>
-                <span className="text-[10px] text-slate-400 dark:text-slate-500 self-end mt-4">Active Buddy</span>
+                <span className="text-[10px] text-slate-400 dark:text-slate-500 self-end mt-4">Active Streak</span>
               </div>
             </div>
           </div>
@@ -144,7 +144,7 @@ const LandingPage = () => {
             </div>
             <h3 className="font-display font-semibold text-lg mb-3">Reflection Journaling</h3>
             <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed">
-              Empty your thoughts and rate your mood. Get optional AI text-tone breakdown reviews to help process emotional blockages, leaving worries in the log.
+              Empty your thoughts and rate your mood. Log daily reflections to help process emotional blockages, leaving worries behind before sleep.
             </p>
           </div>
 
@@ -152,9 +152,9 @@ const LandingPage = () => {
             <div className="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-400 mb-6">
               <MessageSquare className="w-6 h-6" />
             </div>
-            <h3 className="font-display font-semibold text-lg mb-3">AI Companion Chat</h3>
+            <h3 className="font-display font-semibold text-lg mb-3">Progress Tracking</h3>
             <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed">
-              Not a robotic helper. A warm, supportive companion who tracks task completion patterns, congratulates your streaks, and reminds you to rest.
+              Stay consistent with streak metrics and stats. Track your task completion rates over time and build a healthier sleep-wake routine.
             </p>
           </div>
         </div>

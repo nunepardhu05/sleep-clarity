@@ -12,7 +12,6 @@ import Dashboard from './pages/Dashboard';
 import TasksPage from './pages/TasksPage';
 import JournalPage from './pages/JournalPage';
 import AnalyticsPage from './pages/AnalyticsPage';
-import AIChatPage from './pages/AIChatPage';
 import SettingsPage from './pages/SettingsPage';
 import CalendarPage from './pages/CalendarPage';
 
@@ -111,14 +110,6 @@ function App() {
             element={
               <ProtectedRoute>
                 <AnalyticsPage />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/chat" 
-            element={
-              <ProtectedRoute>
-                <AIChatPage />
               </ProtectedRoute>
             } 
           />
