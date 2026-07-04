@@ -19,9 +19,15 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((currentUser) => {
       if (currentUser) {
+        const oldUid = localStorage.getItem('sleep_clarity_current_uid');
+        if (oldUid && oldUid !== currentUser.uid) {
+          localStorage.removeItem('sleep_clarity_profile');
+          localStorage.removeItem('sleep_clarity_tasks');
+          localStorage.removeItem('sleep_clarity_journals');
+          localStorage.removeItem('sleep_clarity_chat_history');
+        }
         localStorage.setItem('sleep_clarity_current_uid', currentUser.uid);
         setUser(currentUser);
-        // Load additional profile details from LocalStorage (or later backend)
         const userProfile = MockServices.getProfile();
         setProfile(userProfile);
       } else {
@@ -88,6 +94,11 @@ export const AuthProvider = ({ children }) => {
   // Email Registration
   const registerWithEmail = async (email, password) => {
     try {
+      localStorage.removeItem('sleep_clarity_profile');
+      localStorage.removeItem('sleep_clarity_tasks');
+      localStorage.removeItem('sleep_clarity_journals');
+      localStorage.removeItem('sleep_clarity_chat_history');
+
       const result = await auth.createUserWithEmailAndPassword(email, password);
       if (result && result.user) {
         localStorage.setItem('sleep_clarity_current_uid', result.user.uid);
@@ -103,6 +114,10 @@ export const AuthProvider = ({ children }) => {
   const logout = async () => {
     setLoading(true);
     localStorage.removeItem('sleep_clarity_current_uid');
+    localStorage.removeItem('sleep_clarity_profile');
+    localStorage.removeItem('sleep_clarity_tasks');
+    localStorage.removeItem('sleep_clarity_journals');
+    localStorage.removeItem('sleep_clarity_chat_history');
     await auth.signOut();
     setUser(null);
     setProfile(null);
