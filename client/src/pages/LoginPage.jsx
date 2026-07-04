@@ -176,8 +176,9 @@ const LoginPage = () => {
     setError('');
     
     if (emailStage === 'email') {
-      if (!email || !email.includes('@')) {
-        setError('Please enter a valid email address.');
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!email || !emailRegex.test(email.trim())) {
+        setError('Invalid email address.');
         return;
       }
       
