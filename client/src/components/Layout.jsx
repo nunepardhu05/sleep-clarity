@@ -331,9 +331,12 @@ const Layout = ({ children }) => {
             </h1>
           </div>
 
-          {/* Real-time Digital Clock in 12-hour format */}
-          <div className="hidden lg:flex items-center gap-2.5 px-4 py-1.5 rounded-xl bg-slate-100/50 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800/80 shadow-xs">
+          {/* Real-time Digital Clock in 12-hour format with Date and Day */}
+          <div className="hidden lg:flex items-center gap-3 px-4 py-1.5 rounded-xl bg-slate-100/50 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800/80 shadow-xs">
             <span className="w-1.5 h-1.5 rounded-full bg-indigoCalm-500 animate-ping"></span>
+            <span className="font-display font-medium text-xs text-slate-500 dark:text-slate-400 border-r border-slate-200 dark:border-slate-800 pr-3">
+              {currentTime.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
+            </span>
             <span className="font-display font-bold text-xs tracking-wide text-slate-700 dark:text-slate-300">
               {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true })}
             </span>
