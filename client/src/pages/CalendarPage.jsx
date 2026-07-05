@@ -416,10 +416,9 @@ const CalendarPage = () => {
                         onChange={(e) => setStartMin(e.target.value)}
                         className="flex-1 px-2 py-2 bg-white dark:bg-[#111326] border border-slate-200 dark:border-slate-800 rounded-xl text-[10px] font-bold focus:outline-hidden disabled:opacity-40"
                       >
-                        {Array.from({ length: 12 }, (_, i) => i * 5).map(m => {
-                          const val = m.toString().padStart(2, '0');
-                          return <option key={val} value={val}>{val}</option>;
-                        })}
+                        {Array.from({ length: 60 }, (_, i) => i.toString().padStart(2, '0')).map(val => (
+                          <option key={val} value={val}>{val}</option>
+                        ))}
                       </select>
                       <select
                         value={startPeriod}
@@ -452,10 +451,9 @@ const CalendarPage = () => {
                         onChange={(e) => setEndMin(e.target.value)}
                         className="flex-1 px-2 py-2 bg-white dark:bg-[#111326] border border-slate-200 dark:border-slate-800 rounded-xl text-[10px] font-bold focus:outline-hidden disabled:opacity-40"
                       >
-                        {Array.from({ length: 12 }, (_, i) => i * 5).map(m => {
-                          const val = m.toString().padStart(2, '0');
-                          return <option key={val} value={val}>{val}</option>;
-                        })}
+                        {Array.from({ length: 60 }, (_, i) => i.toString().padStart(2, '0')).map(val => (
+                          <option key={val} value={val}>{val}</option>
+                        ))}
                       </select>
                       <select
                         value={endPeriod}
