@@ -131,6 +131,26 @@ const Layout = ({ children }) => {
           }
         });
       }
+
+      // 5. 3-Hour Empty Schedule Reminder
+      const todayStr = now.toISOString().split('T')[0];
+      const tasksKey = `sleep_clarity_${uid}_tasks`;
+      const tasks = JSON.parse(localStorage.getItem(tasksKey) || '[]');
+      const todayTasks = tasks.filter(t => t.date === todayStr);
+
+      if (todayTasks.length === 0) {
+        const lastReminderTimeStr = localStorage.getItem(`sleep_clarity_${uid}_last_empty_tasks_reminder_time`);
+        const threeHoursInMs = 3 * 60 * 60 * 1000;
+        const nowMs = now.getTime();
+
+        if (!lastReminderTimeStr || (nowMs - Number(lastReminderTimeStr)) >= threeHoursInMs) {
+          localStorage.setItem(`sleep_clarity_${uid}_last_empty_tasks_reminder_time`, String(nowMs));
+          new Notification("No tasks scheduled today 📝", {
+            body: `You haven't scheduled any tasks for today yet. Schedule at least one task to build your streak!`,
+            icon: "/src/favicon.svg"
+          });
+        }
+      }
     };
 
     const timeToMinutes = (timeStr) => {

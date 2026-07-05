@@ -155,9 +155,23 @@ const saveToStorage = (key, data) => localStorage.setItem(key, JSON.stringify(da
 export const MockServices = {
   // PROFILE SERVICES
   getProfile: () => {
-    // We keep profile returned synchronously to prevent UI blocking on bootstrap,
-    // but settings update will sync it to DB.
-    return JSON.parse(localStorage.getItem(KEYS.PROFILE));
+    const profile = JSON.parse(localStorage.getItem(KEYS.PROFILE));
+    if (profile) {
+      const calculatedStreak = MockServices.calculateStreakFromTasks();
+      if (profile.streak !== calculatedStreak) {
+        profile.streak = calculatedStreak;
+        localStorage.setItem(KEYS.PROFILE, JSON.stringify(profile));
+        
+        if (getMode() === 'fullstack') {
+          fetch(getEndpoint('/api/users/streak/update'), {
+            method: 'POST',
+            headers: getHeaders(),
+            body: JSON.stringify({ streak: calculatedStreak })
+          }).catch(err => console.error("Error syncing streak count to server:", err));
+        }
+      }
+    }
+    return profile;
   },
   
   updateProfile: (profileData) => {
@@ -217,33 +231,57 @@ export const MockServices = {
     }
     return { success: true };
   },
-
-  incrementStreak: () => {
-    const profile = MockServices.getProfile();
-    const todayStr = new Date().toISOString().split('T')[0];
+  
+  calculateStreakFromTasks: () => {
+    const tasks = getFromStorage(KEYS.TASKS);
+    const completedTasks = tasks.filter(t => t.completed && t.date);
     
-    if (profile.lastActive !== todayStr) {
-      const yesterdayStr = new Date(Date.now() - 86400000).toISOString().split('T')[0];
-      let newStreak = profile.streak;
-      
-      if (profile.lastActive === yesterdayStr) {
-        newStreak += 1;
-      } else {
-        newStreak = 1;
-      }
-      
-      profile.streak = newStreak;
-      profile.lastActive = todayStr;
-      localStorage.setItem(KEYS.PROFILE, JSON.stringify(profile));
+    if (completedTasks.length === 0) {
+      return 0;
+    }
 
-      if (getMode() === 'fullstack') {
-        fetch(getEndpoint('/api/users/streak'), {
-          method: 'POST',
-          headers: getHeaders()
-        }).catch(err => console.error("Error syncing streak count to server:", err));
+    const uniqueDates = Array.from(new Set(completedTasks.map(t => t.date)));
+    uniqueDates.sort((a, b) => new Date(b) - new Date(a));
+    
+    const datesSet = new Set(uniqueDates);
+    const getLocalDateStr = (d) => {
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    };
+
+    const todayStr = getLocalDateStr(new Date());
+    const yesterdayStr = getLocalDateStr(new Date(Date.now() - 86400000));
+    
+    const hasToday = datesSet.has(todayStr);
+    const hasYesterday = datesSet.has(yesterdayStr);
+    
+    if (!hasToday && !hasYesterday) {
+      return 0;
+    }
+    
+    let currentCheckDate = new Date();
+    if (!hasToday && hasYesterday) {
+      currentCheckDate = new Date(Date.now() - 86400000);
+    }
+    
+    let streakCount = 0;
+    while (true) {
+      const checkDateStr = getLocalDateStr(currentCheckDate);
+      if (datesSet.has(checkDateStr)) {
+        streakCount++;
+        currentCheckDate.setDate(currentCheckDate.getDate() - 1);
+      } else {
+        break;
       }
     }
-    return profile.streak;
+    
+    return streakCount;
+  },
+
+  incrementStreak: () => {
+    return MockServices.calculateStreakFromTasks();
   },
 
   // TASK SERVICES
@@ -267,7 +305,6 @@ export const MockServices = {
     };
     all.push(newTask);
     MockServices.saveTasks(all);
-    MockServices.incrementStreak();
 
     if (getMode() === 'fullstack') {
       fetch(getEndpoint('/api/tasks'), {
@@ -358,7 +395,6 @@ export const MockServices = {
     }
     
     saveToStorage(KEYS.JOURNALS, all);
-    MockServices.incrementStreak();
 
     if (getMode() === 'fullstack') {
       fetch(getEndpoint('/api/journals'), {
