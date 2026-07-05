@@ -97,7 +97,7 @@ const TasksPage = () => {
         const currentMins = now.getHours() * 60 + now.getMinutes();
         const startMins = toMins(finalStart);
         if (startMins < currentMins) {
-          setError('Scheduled start time must be equal to or after the current time.');
+          setError('You cannot add a task before the current time.');
           return;
         }
       }
