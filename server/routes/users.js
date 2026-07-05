@@ -97,7 +97,7 @@ router.get('/profile', verifyToken, async (req, res) => {
 
 // POST update user profile
 router.post('/profile', verifyToken, async (req, res) => {
-  const { name, sleepTime, wakeTime, goal } = req.body;
+  const { name, sleepTime, wakeTime, goal, monthlyGoals, yearlyGoals } = req.body;
   try {
     let user = await User.findOne({ firebaseUid: req.user.uid });
     
@@ -109,6 +109,8 @@ router.post('/profile', verifyToken, async (req, res) => {
     if (sleepTime !== undefined) user.sleepTime = sleepTime;
     if (wakeTime !== undefined) user.wakeTime = wakeTime;
     if (goal !== undefined) user.goal = goal;
+    if (monthlyGoals !== undefined) user.monthlyGoals = monthlyGoals;
+    if (yearlyGoals !== undefined) user.yearlyGoals = yearlyGoals;
     
     await user.save();
     res.json(user);

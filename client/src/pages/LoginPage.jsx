@@ -9,7 +9,7 @@ const LoginPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [step, setStep] = useState('email'); // email, setup, verify
+  const [step, setStep] = useState('email'); // email, signup-setup, signup-email, verify, password-setup
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isSignUp, setIsSignUp] = useState(false);
@@ -22,9 +22,10 @@ const LoginPage = () => {
     const mode = params.get('mode');
     if (mode === 'signup') {
       setIsSignUp(true);
-      setEmailStage('email');
+      setStep('signup-setup');
     } else if (mode === 'signin') {
       setIsSignUp(false);
+      setStep('email');
       setEmailStage('email');
     }
   }, [location.search]);
@@ -37,7 +38,6 @@ const LoginPage = () => {
   const [wakeHour, setWakeHour] = useState('07');
   const [wakeMin, setWakeMin] = useState('00');
   const [wakePeriod, setWakePeriod] = useState('AM');
-  const [goal, setGoal] = useState('');
 
   const convert12To24 = (h, m, p) => {
     let hour = parseInt(h);
@@ -54,13 +54,13 @@ const LoginPage = () => {
   const [setupConfirmPassword, setSetupConfirmPassword] = useState('');
   const [showSetupPassword, setShowSetupPassword] = useState(false);
 
-  const getPasswordStrength = () => {
-    if (!password) return { score: 0, text: 'Weak', color: 'text-slate-400', barColor: 'bg-slate-200' };
+  const getPasswordStrength = (pw) => {
+    if (!pw) return { score: 0, text: 'Weak', color: 'text-slate-400', barColor: 'bg-slate-200' };
     let score = 0;
-    if (password.length >= 8) score++;
-    if (/[A-Z]/.test(password) || /[0-9]/.test(password)) score++;
-    if (/[^A-Za-z0-9]/.test(password)) score++;
-    if (password.length >= 12) score++;
+    if (pw.length >= 8) score++;
+    if (/[a-zA-Z]/.test(pw) && /[0-9]/.test(pw)) score++;
+    if (/[^A-Za-z0-9]/.test(pw)) score++;
+    if (pw.length >= 12) score++;
 
     const mapping = [
       { score: 0, text: 'Weak', color: 'text-red-500', barColor: 'bg-red-500' },
@@ -72,7 +72,7 @@ const LoginPage = () => {
     return mapping[score] || mapping[0];
   };
 
-  const strength = getPasswordStrength();
+  const strength = getPasswordStrength(step === 'password-setup' ? setupPassword : password);
 
   // Automatically check authentication redirection on state updates
   useEffect(() => {
@@ -84,7 +84,7 @@ const LoginPage = () => {
         if (profileData && profileData.name) {
           navigate('/dashboard');
         } else {
-          setStep('setup');
+          setStep('password-setup');
         }
       }
     }
@@ -102,7 +102,7 @@ const LoginPage = () => {
             if (profileData && profileData.name) {
               navigate('/dashboard');
             } else {
-              setStep('setup');
+              setStep('password-setup');
             }
           }
         } catch (err) {
@@ -136,7 +136,7 @@ const LoginPage = () => {
         if (profileData && profileData.name) {
           navigate('/dashboard');
         } else {
-          setStep('setup');
+          setStep('password-setup');
         }
       } else {
         setError('Your email is not verified yet. Please click the link in your email and click this button again.');
@@ -247,39 +247,15 @@ const LoginPage = () => {
     }
   };
 
-  // Handle Onboarding Profile Setup & Password Config
-  const handleSetupSubmit = async (e) => {
+  // Step 1 Sign Up Details Submit
+  const handleSignUpSetupSubmit = (e) => {
     e.preventDefault();
     setError('');
     if (!name.trim()) {
       setError('Please enter your name.');
       return;
     }
-    
-    // Validate password selection
-    if (!setupPassword) {
-      setError('Please choose a password for your account.');
-      return;
-    }
-    if (setupPassword !== setupConfirmPassword) {
-      setError('Passwords do not match.');
-      return;
-    }
-    
-    // Enforce strong password policy
-    const hasLetter = /[a-zA-Z]/.test(setupPassword);
-    const hasNumber = /[0-9]/.test(setupPassword);
-    if (setupPassword.length < 8 || !hasLetter || !hasNumber) {
-      setError('For security, passwords must be at least 8 characters long and contain both letters and numbers.');
-      return;
-    }
-    
-    if (!goal.trim()) {
-      setError('Please write down at least one productivity goal.');
-      return;
-    }
 
-    // Validate 6-hour sleep difference
     const finalSleep = convert12To24(sleepHour, sleepMin, sleepPeriod);
     const finalWake = convert12To24(wakeHour, wakeMin, wakePeriod);
 
@@ -296,13 +272,44 @@ const LoginPage = () => {
       return;
     }
 
+    setStep('signup-email');
+  };
+
+  // Step 4 Password Setup Submit
+  const handlePasswordSetupSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    
+    if (!setupPassword) {
+      setError('Please choose a password for your account.');
+      return;
+    }
+    if (setupPassword !== setupConfirmPassword) {
+      setError('Passwords do not match.');
+      return;
+    }
+    
+    const hasLetter = /[a-zA-Z]/.test(setupPassword);
+    const hasNumber = /[0-9]/.test(setupPassword);
+    if (setupPassword.length < 8 || !hasLetter || !hasNumber) {
+      setError('For security, passwords must be at least 8 characters long and contain both letters and numbers.');
+      return;
+    }
+    
     setLoading(true);
     try {
-      // Update password in authentication service
       await updateUserPassword(setupPassword);
       
-      // Complete profile onboarding
-      onboardUser({ name, sleepTime: finalSleep, wakeTime: finalWake, goal });
+      const finalSleep = convert12To24(sleepHour, sleepMin, sleepPeriod);
+      const finalWake = convert12To24(wakeHour, wakeMin, wakePeriod);
+      
+      onboardUser({ 
+        name, 
+        sleepTime: finalSleep, 
+        wakeTime: finalWake,
+        monthlyGoals: '',
+        yearlyGoals: ''
+      });
       
       localStorage.removeItem('sleep_clarity_temp_register_pass');
       navigate('/dashboard');
@@ -339,12 +346,12 @@ const LoginPage = () => {
             </div>
           )}
 
-          {/* STEP 1: EMAIL PASSWORD INPUT */}
+          {/* STEP 1 (SIGN IN): EMAIL PASSWORD INPUT */}
           {step === 'email' && (
             <div className="page-fade-in text-left">
-              <h2 className="font-display font-bold text-xl mb-1.5">{isSignUp ? 'Create your Account' : 'Welcome Back'}</h2>
+              <h2 className="font-display font-bold text-xl mb-1.5">Welcome Back</h2>
               <p className="text-xs text-slate-500 dark:text-slate-400 mb-6 leading-relaxed">
-                {isSignUp ? 'Sign up with your email and password to begin planning.' : 'Sign in using your registered email and password.'}
+                Sign in using your registered email and password.
               </p>
 
               <form onSubmit={handleEmailSubmit} className="space-y-4">
@@ -363,7 +370,6 @@ const LoginPage = () => {
                   </div>
                 ) : (
                   <div className="page-fade-in space-y-4">
-                    {/* Google-like Account details badge */}
                     <div className="flex items-center justify-between bg-slate-100 dark:bg-slate-900/60 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800/80">
                       <span className="text-xs font-semibold text-slate-600 dark:text-slate-300 truncate max-w-[220px]">{email}</span>
                       <button 
@@ -381,16 +387,14 @@ const LoginPage = () => {
                     <div>
                       <div className="flex justify-between items-center mb-1.5">
                         <label className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Password</label>
-                        {!isSignUp && (
-                          <button
-                            type="button"
-                            onClick={handleForgotPassword}
-                            disabled={loading}
-                            className="text-[10px] font-bold text-indigoCalm-600 dark:text-indigoCalm-400 hover:underline"
-                          >
-                            Forgot Password?
-                          </button>
-                        )}
+                        <button
+                          type="button"
+                          onClick={handleForgotPassword}
+                          disabled={loading}
+                          className="text-[10px] font-bold text-indigoCalm-600 dark:text-indigoCalm-400 hover:underline"
+                        >
+                          Forgot Password?
+                        </button>
                       </div>
                       <div className="relative">
                         <input
@@ -411,20 +415,6 @@ const LoginPage = () => {
                         </button>
                       </div>
                     </div>
-
-                    {/* Password Strength Meter */}
-                    <div className="mt-2 space-y-1">
-                      <div className="flex justify-between items-center text-[9px] font-bold uppercase tracking-wider text-slate-400">
-                        <span>Password Strength</span>
-                        <span className={strength.color}>{strength.text}</span>
-                      </div>
-                      <div className="grid grid-cols-4 gap-1">
-                        <div className={`h-1 rounded-full ${strength.score >= 1 ? strength.barColor : 'bg-slate-200 dark:bg-slate-850'}`}></div>
-                        <div className={`h-1 rounded-full ${strength.score >= 2 ? strength.barColor : 'bg-slate-200 dark:bg-slate-850'}`}></div>
-                        <div className={`h-1 rounded-full ${strength.score >= 3 ? strength.barColor : 'bg-slate-200 dark:bg-slate-850'}`}></div>
-                        <div className={`h-1 rounded-full ${strength.score >= 4 ? strength.barColor : 'bg-slate-200 dark:bg-slate-850'}`}></div>
-                      </div>
-                    </div>
                   </div>
                 )}
 
@@ -433,17 +423,20 @@ const LoginPage = () => {
                   disabled={loading}
                   className="w-full py-4 bg-indigoCalm-600 hover:bg-indigoCalm-700 text-white rounded-xl text-sm font-semibold shadow-lg shadow-indigoCalm-600/10 transition-colors flex items-center justify-center gap-2"
                 >
-                  {loading ? 'Processing...' : (emailStage === 'email' ? 'Next' : (isSignUp ? 'Sign Up' : 'Sign In'))}
+                  {loading ? 'Processing...' : (emailStage === 'email' ? 'Next' : 'Sign In')}
                   <ArrowRight className="w-4 h-4" />
                 </button>
 
                 {emailStage === 'email' ? (
                   <button
                     type="button"
-                    onClick={() => setIsSignUp(!isSignUp)}
+                    onClick={() => {
+                      setIsSignUp(true);
+                      setStep('signup-setup');
+                    }}
                     className="w-full text-center text-xs text-slate-400 dark:text-slate-500 font-medium hover:underline block mt-2"
                   >
-                    {isSignUp ? 'Already have an account? Sign In' : "Don't have an account? Sign Up"}
+                    Don't have an account? Sign Up
                   </button>
                 ) : (
                   <button
@@ -461,23 +454,20 @@ const LoginPage = () => {
             </div>
           )}
 
-          {/* STEP 3: FIRST-TIME PROFILE SETUP */}
-          {step === 'setup' && (
-            <div className="page-fade-in">
-              <div className="flex items-center gap-2 mb-1.5">
-                <Sparkles className="w-5 h-5 text-dawn-500" />
-                <h2 className="font-display font-bold text-xl">Onboarding Setup</h2>
-              </div>
+          {/* STEP 1 (SIGN UP): NAME AND SLEEP/WAKE TARGETS */}
+          {step === 'signup-setup' && (
+            <div className="page-fade-in text-left">
+              <h2 className="font-display font-bold text-xl mb-1.5">Create your Account</h2>
               <p className="text-xs text-slate-500 dark:text-slate-400 mb-6 leading-relaxed">
-                Welcome to the platform. Let's customize your nighttime buffers.
+                Step 1 of 3: Enter your details and sleep/wake targets.
               </p>
 
-              <form onSubmit={handleSetupSubmit} className="space-y-4 text-left">
-                {/* Name */}
+              <form onSubmit={handleSignUpSetupSubmit} className="space-y-4">
                 <div>
                   <label className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 block mb-1.5 uppercase tracking-wider">Your Name</label>
                   <input
                     type="text"
+                    required
                     placeholder="Alex Developer"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
@@ -485,37 +475,6 @@ const LoginPage = () => {
                   />
                 </div>
 
-                {/* Password Configuration */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 block mb-1.5 uppercase tracking-wider">Choose Password</label>
-                    <div className="relative">
-                      <input
-                        type={showSetupPassword ? 'text' : 'password'}
-                        placeholder="••••••••"
-                        value={setupPassword}
-                        onChange={(e) => setSetupPassword(e.target.value)}
-                        className="w-full px-4 py-3 bg-white dark:bg-[#12162a] border border-slate-200 dark:border-slate-800 rounded-xl text-sm font-medium focus:outline-hidden focus:ring-2 focus:ring-indigoCalm-500/40"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowSetupPassword(!showSetupPassword)}
-                        className="absolute right-4 top-3 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-350"
-                      >
-                        {showSetupPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                      </button>
-                    </div>
-                  </div>
-                  <div>
-                    <label className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 block mb-1.5 uppercase tracking-wider">Confirm Password</label>
-                    <input
-                      type={showSetupPassword ? 'text' : 'password'}
-                      placeholder="••••••••"
-                      value={setupConfirmPassword}
-                      onChange={(e) => setSetupConfirmPassword(e.target.value)}
-                      className="w-full px-4 py-3 bg-white dark:bg-[#12162a] border border-slate-200 dark:border-slate-800 rounded-xl text-sm font-medium focus:outline-hidden focus:ring-2 focus:ring-indigoCalm-500/40"
-                    />
-                 {/* Sleep & Wake Times */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 block mb-1.5 uppercase tracking-wider flex items-center gap-1">
@@ -550,6 +509,7 @@ const LoginPage = () => {
                       </select>
                     </div>
                   </div>
+
                   <div>
                     <label className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 block mb-1.5 uppercase tracking-wider flex items-center gap-1">
                       <Clock className="w-3.5 h-3.5" /> Wake-up Time
@@ -584,44 +544,83 @@ const LoginPage = () => {
                     </div>
                   </div>
                 </div>
-                  </div>
-                </div>
 
-                {/* Goals */}
+                <button
+                  type="submit"
+                  className="w-full py-4 bg-indigoCalm-600 hover:bg-indigoCalm-700 text-white rounded-xl text-sm font-semibold shadow-lg shadow-indigoCalm-600/10 transition-colors flex items-center justify-center gap-2"
+                >
+                  Next step
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsSignUp(false);
+                    setStep('email');
+                  }}
+                  className="w-full text-center text-xs text-slate-400 dark:text-slate-500 font-medium hover:underline block mt-2"
+                >
+                  Already have an account? Sign In
+                </button>
+              </form>
+            </div>
+          )}
+
+          {/* STEP 2 (SIGN UP): EMAIL ENTRY */}
+          {step === 'signup-email' && (
+            <div className="page-fade-in text-left">
+              <h2 className="font-display font-bold text-xl mb-1.5">Enter your Email</h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mb-6 leading-relaxed">
+                Step 2 of 3: Provide your email address to verify your account.
+              </p>
+
+              <form onSubmit={handleEmailSubmit} className="space-y-4">
                 <div>
-                  <label className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 block mb-1.5 uppercase tracking-wider">Productivity Target</label>
-                  <textarea
-                    placeholder="e.g. Finish development tasks in the mornings, and read Atomic Habits before bed."
-                    value={goal}
-                    onChange={(e) => setGoal(e.target.value)}
-                    rows={3}
+                  <label className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 block mb-1.5 uppercase tracking-wider">Email Address</label>
+                  <input
+                    type="email"
+                    required
+                    placeholder="alex@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    disabled={loading}
                     className="w-full px-4 py-3 bg-white dark:bg-[#12162a] border border-slate-200 dark:border-slate-800 rounded-xl text-sm font-medium focus:outline-hidden focus:ring-2 focus:ring-indigoCalm-500/40"
                   />
                 </div>
 
                 <button
                   type="submit"
+                  disabled={loading}
                   className="w-full py-4 bg-indigoCalm-600 hover:bg-indigoCalm-700 text-white rounded-xl text-sm font-semibold shadow-lg shadow-indigoCalm-600/10 transition-colors flex items-center justify-center gap-2"
                 >
-                  Create My Profile
+                  {loading ? 'Registering...' : 'Send Verification Email'}
                   <ArrowRight className="w-4 h-4" />
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setStep('signup-setup')}
+                  className="w-full text-center text-xs text-slate-400 dark:text-slate-500 font-medium hover:underline block mt-2"
+                >
+                  Back to Step 1
                 </button>
               </form>
             </div>
           )}
 
-          {/* STEP 3: EMAIL VERIFICATION REQUIRED */}
+          {/* STEP 3 (SIGN UP): EMAIL VERIFICATION PENDING */}
           {step === 'verify' && (
             <div className="page-fade-in text-left">
               <h2 className="font-display font-bold text-xl mb-1.5">Verify your Email</h2>
               <p className="text-xs text-slate-500 dark:text-slate-400 mb-6 leading-relaxed">
-                We sent a verification link to <span className="font-semibold text-slate-700 dark:text-indigoCalm-400">{user?.email}</span>. Please click the link inside your email (inbox or spam) to verify your account.
+                We sent a verification link to <span className="font-semibold text-slate-700 dark:text-indigoCalm-400">{user?.email}</span>. Please click the link inside your email to verify your account.
               </p>
 
               <div className="p-3.5 bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400 text-xs rounded-xl font-medium mb-5 leading-relaxed flex gap-2.5 items-start">
                 <span className="text-sm mt-0.5">⏳</span>
                 <p>
-                  Waiting for verification. Once you click the link inside your email, this page will **automatically** verify you and redirect you to create your profile.
+                  Waiting for verification. Once you click the link inside your email, this page will **automatically** verify you and redirect you to create your password.
                 </p>
               </div>
 
@@ -649,9 +648,79 @@ const LoginPage = () => {
                   onClick={logout}
                   className="w-full text-center text-xs text-slate-400 dark:text-slate-500 font-medium hover:underline block mt-2"
                 >
-                  Back to Login
+                  Back to Sign In
                 </button>
               </div>
+            </div>
+          )}
+
+          {/* STEP 4 (SIGN UP): PASSWORD SETUP */}
+          {step === 'password-setup' && (
+            <div className="page-fade-in text-left">
+              <h2 className="font-display font-bold text-xl mb-1.5">Choose your Password</h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mb-6 leading-relaxed">
+                Step 3 of 3: Choose a secure password to complete your account setup.
+              </p>
+
+              <form onSubmit={handlePasswordSetupSubmit} className="space-y-4">
+                <div>
+                  <label className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 block mb-1.5 uppercase tracking-wider">Choose Password</label>
+                  <div className="relative">
+                    <input
+                      type={showSetupPassword ? 'text' : 'password'}
+                      required
+                      placeholder="••••••••"
+                      value={setupPassword}
+                      onChange={(e) => setSetupPassword(e.target.value)}
+                      disabled={loading}
+                      className="w-full px-4 py-3 bg-white dark:bg-[#12162a] border border-slate-200 dark:border-slate-800 rounded-xl text-sm font-medium focus:outline-hidden focus:ring-2 focus:ring-indigoCalm-500/40"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowSetupPassword(!showSetupPassword)}
+                      className="absolute right-4 top-3 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-350"
+                    >
+                      {showSetupPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 block mb-1.5 uppercase tracking-wider">Confirm Password</label>
+                  <input
+                    type={showSetupPassword ? 'text' : 'password'}
+                    required
+                    placeholder="••••••••"
+                    value={setupConfirmPassword}
+                    onChange={(e) => setSetupConfirmPassword(e.target.value)}
+                    disabled={loading}
+                    className="w-full px-4 py-3 bg-white dark:bg-[#12162a] border border-slate-200 dark:border-slate-800 rounded-xl text-sm font-medium focus:outline-hidden focus:ring-2 focus:ring-indigoCalm-500/40"
+                  />
+                </div>
+
+                {/* Password Strength Meter */}
+                <div className="mt-2 space-y-1">
+                  <div className="flex justify-between items-center text-[9px] font-bold uppercase tracking-wider text-slate-400">
+                    <span>Password Strength</span>
+                    <span className={strength.color}>{strength.text}</span>
+                  </div>
+                  <div className="grid grid-cols-4 gap-1">
+                    <div className={`h-1 rounded-full ${strength.score >= 1 ? strength.barColor : 'bg-slate-200 dark:bg-slate-850'}`}></div>
+                    <div className={`h-1 rounded-full ${strength.score >= 2 ? strength.barColor : 'bg-slate-200 dark:bg-slate-850'}`}></div>
+                    <div className={`h-1 rounded-full ${strength.score >= 3 ? strength.barColor : 'bg-slate-200 dark:bg-slate-850'}`}></div>
+                    <div className={`h-1 rounded-full ${strength.score >= 4 ? strength.barColor : 'bg-slate-200 dark:bg-slate-850'}`}></div>
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full py-4 bg-indigoCalm-600 hover:bg-indigoCalm-700 text-white rounded-xl text-sm font-semibold shadow-lg shadow-indigoCalm-600/10 transition-colors flex items-center justify-center gap-2"
+                >
+                  {loading ? 'Saving...' : 'Complete Setup & Go to Dashboard'}
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </form>
             </div>
           )}
 

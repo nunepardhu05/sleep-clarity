@@ -24,10 +24,11 @@ const seedData = () => {
       name: 'Alex Developer',
       sleepTime: '23:00',
       wakeTime: '07:00',
-      goal: 'Maintain consistent coding habit and sleep by 11 PM',
-      streak: 5,
+      monthlyGoals: 'Complete project milestone and maintain sleep window',
+      yearlyGoals: 'Build consistent sleep clarity and productivity habits',
+      streak: 0,
       lastActive: new Date().toISOString().split('T')[0],
-      phone: '+1 (555) 019-2834',
+      phone: '',
     }));
   }
 
@@ -479,7 +480,8 @@ export const MockServices = {
       name,
       sleepTime,
       wakeTime,
-      goal: '',
+      monthlyGoals: '',
+      yearlyGoals: '',
       streak: 0,
       lastActive: new Date().toISOString().split('T')[0],
       phone,

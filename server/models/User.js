@@ -26,6 +26,14 @@ const UserSchema = new mongoose.Schema({
     type: String,
     default: '',
   },
+  monthlyGoals: {
+    type: String,
+    default: '',
+  },
+  yearlyGoals: {
+    type: String,
+    default: '',
+  },
   streak: {
     type: Number,
     default: 0,

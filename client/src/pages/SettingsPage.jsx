@@ -43,18 +43,19 @@ const SettingsPage = () => {
   const [wakeHour, setWakeHour] = useState(initialWake.hour);
   const [wakeMin, setWakeMin] = useState(initialWake.minute);
   const [wakePeriod, setWakePeriod] = useState(initialWake.period);
-  const [goal, setGoal] = useState(profile?.goal || '');
+  const [monthlyGoals, setMonthlyGoals] = useState(profile?.monthlyGoals || '');
+  const [yearlyGoals, setYearlyGoals] = useState(profile?.yearlyGoals || '');
   const [savedProfile, setSavedProfile] = useState(false);
   const [error, setError] = useState('');
-
+ 
   const handleProfileSave = (e) => {
     e.preventDefault();
     setError('');
-    if (!name.trim() || !goal.trim()) return;
-
+    if (!name.trim()) return;
+ 
     const finalSleep = convert12To24(sleepHour, sleepMin, sleepPeriod);
     const finalWake = convert12To24(wakeHour, wakeMin, wakePeriod);
-
+ 
     // Validate 6-hour sleep target difference
     const getSleepDurationInHours = (sleep, wake) => {
       const [sleepH, sleepM] = sleep.split(':').map(Number);
@@ -63,14 +64,14 @@ const SettingsPage = () => {
       if (diff < 0) diff += 24 * 60;
       return diff / 60;
     };
-
+ 
     const duration = getSleepDurationInHours(finalSleep, finalWake);
     if (duration < 6) {
       setError('Sleep target and wake target difference must be at least 6 hours.');
       return;
     }
-
-    updateProfile({ name, sleepTime: finalSleep, wakeTime: finalWake, goal });
+ 
+    updateProfile({ name, sleepTime: finalSleep, wakeTime: finalWake, monthlyGoals, yearlyGoals });
     setSavedProfile(true);
     setTimeout(() => setSavedProfile(false), 2000);
   };
@@ -195,10 +196,22 @@ const SettingsPage = () => {
             </div>
 
             <div>
-              <label className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider block mb-1">{t('goalLabel')}</label>
+              <label className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider block mb-1">Monthly Goals</label>
               <textarea
-                value={goal}
-                onChange={(e) => setGoal(e.target.value)}
+                value={monthlyGoals}
+                onChange={(e) => setMonthlyGoals(e.target.value)}
+                placeholder="List your goals for this month..."
+                rows={3}
+                className="w-full px-3 py-2 bg-white dark:bg-[#12162a] border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-medium focus:outline-hidden"
+              />
+            </div>
+
+            <div>
+              <label className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider block mb-1">Yearly Goals</label>
+              <textarea
+                value={yearlyGoals}
+                onChange={(e) => setYearlyGoals(e.target.value)}
+                placeholder="List your goals for this year..."
                 rows={3}
                 className="w-full px-3 py-2 bg-white dark:bg-[#12162a] border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-medium focus:outline-hidden"
               />
