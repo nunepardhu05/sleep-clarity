@@ -139,6 +139,18 @@ const CalendarPage = () => {
         return h * 60 + m;
       };
 
+      // Validate task is not in the past if scheduling for today
+      const todayStr = new Date().toISOString().split('T')[0];
+      if (selectedDateStr === todayStr) {
+        const now = new Date();
+        const currentMins = now.getHours() * 60 + now.getMinutes();
+        const startMins = toMins(finalStart);
+        if (startMins < currentMins) {
+          setError('Scheduled start time must be equal to or after the current time.');
+          return;
+        }
+      }
+
       const inSleep = (min, s, w) => {
         if (s <= w) {
           return min >= s && min < w;

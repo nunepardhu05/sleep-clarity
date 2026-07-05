@@ -91,6 +91,17 @@ const TasksPage = () => {
         return h * 60 + m;
       };
 
+      // Validate task is not in the past if scheduling for today
+      if (activeTab === 'today') {
+        const now = new Date();
+        const currentMins = now.getHours() * 60 + now.getMinutes();
+        const startMins = toMins(finalStart);
+        if (startMins < currentMins) {
+          setError('Scheduled start time must be equal to or after the current time.');
+          return;
+        }
+      }
+
       const inSleep = (min, s, w) => {
         if (s <= w) {
           return min >= s && min < w;
