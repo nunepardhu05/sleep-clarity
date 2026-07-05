@@ -53,6 +53,7 @@ const verifyToken = async (req, res, next) => {
     const decodedToken = await admin.auth().verifyIdToken(token);
     req.user = {
       uid: decodedToken.uid,
+      email: decodedToken.email || '',
       phone: decodedToken.phone_number || '',
       name: decodedToken.name || '',
     };

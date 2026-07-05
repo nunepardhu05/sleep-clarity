@@ -107,7 +107,12 @@ router.get('/profile', verifyToken, async (req, res) => {
         firebaseUid: req.user.uid,
         phone: req.user.phone || '',
         name: req.user.name || '',
+        email: req.user.email || '',
       });
+      await user.save();
+    } else if (req.user.email && !user.email) {
+      // Auto-migrate missing email field
+      user.email = req.user.email.toLowerCase();
       await user.save();
     }
 

@@ -211,7 +211,7 @@ const LoginPage = () => {
         setLoading(true);
         try {
           const exists = await MockServices.checkEmailExists(email.trim());
-          if (!exists) {
+          if (!exists && isMockMode) {
             setError('Account does not exist. Please check your spelling or switch to Sign Up.');
             return;
           }
