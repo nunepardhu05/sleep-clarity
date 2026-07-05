@@ -35,7 +35,7 @@ const LoginPage = () => {
   const [sleepHour, setSleepHour] = useState('11');
   const [sleepMin, setSleepMin] = useState('00');
   const [sleepPeriod, setSleepPeriod] = useState('PM');
-  const [wakeHour, setWakeHour] = useState('07');
+  const [wakeHour, setWakeHour] = useState('7');
   const [wakeMin, setWakeMin] = useState('00');
   const [wakePeriod, setWakePeriod] = useState('AM');
 
