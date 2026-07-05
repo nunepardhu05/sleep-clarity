@@ -91,20 +91,6 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Google Login
-  const loginWithGoogle = async () => {
-    try {
-      const result = await auth.signInWithGoogle();
-      if (result && result.user) {
-        localStorage.setItem('sleep_clarity_current_uid', result.user.uid);
-      }
-      return result;
-    } catch (error) {
-      console.error("Failed Google Login:", error);
-      throw error;
-    }
-  };
-
   // Email Registration
   const registerWithEmail = async (email, password) => {
     try {
@@ -208,7 +194,6 @@ export const AuthProvider = ({ children }) => {
     isMockMode,
     sendOTP,
     loginWithEmail,
-    loginWithGoogle,
     registerWithEmail,
     logout,
     onboardUser,

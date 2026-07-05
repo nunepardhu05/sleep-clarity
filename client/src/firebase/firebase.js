@@ -1,6 +1,6 @@
 // firebase.js - Real-Time Firebase Auth Connector with Mock Simulation Fallback
 import { initializeApp } from 'firebase/app';
-import { getAuth, RecaptchaVerifier, signInWithPhoneNumber as firebaseSignIn, signInWithEmailAndPassword as firebaseSignInWithEmail, createUserWithEmailAndPassword as firebaseCreateUserWithEmail, sendEmailVerification, reload, updatePassword, sendPasswordResetEmail, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { getAuth, RecaptchaVerifier, signInWithPhoneNumber as firebaseSignIn, signInWithEmailAndPassword as firebaseSignInWithEmail, createUserWithEmailAndPassword as firebaseCreateUserWithEmail, sendEmailVerification, reload, updatePassword, sendPasswordResetEmail } from 'firebase/auth';
 
 
 let auth = null;
@@ -195,43 +195,6 @@ class MockAuthInstance {
     console.log(`[Mock Mode] Password reset email sent to: ${email}`);
     return Promise.resolve();
   }
-
-  async signInWithGoogle() {
-    console.log(`[Mock Mode] Signing in with Google`);
-    const email = 'mock-google-user@gmail.com';
-    const uid = `mock-google-${Date.now()}`;
-    
-    this.currentUser = {
-      uid: uid,
-      email: email,
-      displayName: 'Google User',
-      emailVerified: true,
-      getIdToken: async () => Promise.resolve('mock-jwt-session-token'),
-    };
-    
-    localStorage.setItem('sleep_clarity_current_uid', uid);
-    
-    const accounts = JSON.parse(localStorage.getItem('sleep_clarity_mock_accounts') || '{}');
-    accounts[email] = 'mock-google-oauth-provider-pass';
-    localStorage.setItem('sleep_clarity_mock_accounts', JSON.stringify(accounts));
-
-    const existingProfile = localStorage.getItem(`sleep_clarity_${uid}_profile`);
-    if (!existingProfile) {
-      localStorage.setItem(`sleep_clarity_${uid}_profile`, JSON.stringify({
-        name: 'Google User',
-        sleepTime: '23:00',
-        wakeTime: '07:00',
-        goal: 'Get productive & sleep early',
-        streak: 0,
-        lastActive: new Date().toISOString().split('T')[0],
-        phone: '',
-        email: email,
-      }));
-    }
-    
-    this.notifyListeners();
-    return { user: this.currentUser };
-  }
 }
 
 const hasFirebaseKeys = 
@@ -302,10 +265,6 @@ if (hasFirebaseKeys) {
       },
       sendPasswordResetEmail: (email) => {
         return sendPasswordResetEmail(fbAuth, email);
-      },
-      signInWithGoogle: () => {
-        const provider = new GoogleAuthProvider();
-        return signInWithPopup(fbAuth, provider);
       }
     };
     
