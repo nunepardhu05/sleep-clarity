@@ -5,7 +5,7 @@ import { MockServices } from '../services/MockServices';
 import { Moon, Shield, ArrowRight, Smartphone, Clock, Sparkles, Eye, EyeOff } from 'lucide-react';
 
 const LoginPage = () => {
-  const { user, profile, sendOTP, loginWithEmail, registerWithEmail, onboardUser, isMockMode, sendVerificationEmail, reloadUser, logout, updateUserPassword, sendPasswordReset } = useAuth();
+  const { user, profile, sendOTP, loginWithEmail, registerWithEmail, onboardUser, isMockMode, sendVerificationEmail, reloadUser, logout, updateUserPassword, sendPasswordReset, simulateMockVerification } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -665,6 +665,22 @@ const LoginPage = () => {
                   Waiting for verification. Once you click the link inside your email, this page will **automatically** verify you and redirect you to create your password.
                 </p>
               </div>
+
+              {isMockMode && (
+                <div className="p-3.5 bg-indigoCalm-500/10 border border-indigoCalm-500/25 rounded-xl text-xs text-indigoCalm-700 dark:text-indigoCalm-400 mb-4 leading-relaxed">
+                  <span className="font-bold">Mock Mode Debug:</span> Real email accounts require checking your real inbox. For mock sandbox verification, click below:
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      simulateMockVerification();
+                      await handleCheckVerification();
+                    }}
+                    className="mt-2 w-full py-2 bg-indigoCalm-600 text-white rounded-lg font-semibold hover:bg-indigoCalm-700 transition-colors shadow-sm"
+                  >
+                    Simulate Verification Link Click
+                  </button>
+                </div>
+              )}
 
               <div className="space-y-4">
                 <button

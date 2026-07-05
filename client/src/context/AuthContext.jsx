@@ -203,6 +203,11 @@ export const AuthProvider = ({ children }) => {
     reloadUser,
     updateUserPassword,
     sendPasswordReset,
+    simulateMockVerification: () => {
+      if (auth && auth.simulateMockVerification) {
+        auth.simulateMockVerification();
+      }
+    },
   };
 
   return (

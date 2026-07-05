@@ -170,11 +170,15 @@ class MockAuthInstance {
 
   async reloadUser() {
     console.log("[Mock Mode] Reloading user");
+    return Promise.resolve();
+  }
+
+  simulateMockVerification() {
+    console.log("[Mock Mode] Simulating email verification");
     if (this.currentUser) {
       this.currentUser.emailVerified = true;
       this.notifyListeners();
     }
-    return Promise.resolve();
   }
 
   async updatePassword(password) {
