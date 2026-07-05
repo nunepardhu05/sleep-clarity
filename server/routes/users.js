@@ -8,14 +8,28 @@ const verifyToken = require('../middleware/auth');
 
 // Helper to calculate user streak from completed tasks
 const calculateUserStreak = async (userId) => {
-  const completedTasks = await Task.find({ userId, completed: true });
-  if (completedTasks.length === 0) {
+  const allTasks = await Task.find({ userId });
+  if (allTasks.length === 0) {
     return 0;
   }
 
-  const uniqueDates = Array.from(new Set(completedTasks.map(t => t.date)));
-  uniqueDates.sort((a, b) => new Date(b) - new Date(a));
-  const datesSet = new Set(uniqueDates);
+  const tasksByDate = {};
+  allTasks.forEach(t => {
+    if (!t.date) return;
+    if (!tasksByDate[t.date]) {
+      tasksByDate[t.date] = [];
+    }
+    tasksByDate[t.date].push(t);
+  });
+
+  const activeDates = new Set();
+  Object.keys(tasksByDate).forEach(dateStr => {
+    const dayTasks = tasksByDate[dateStr];
+    const allCompleted = dayTasks.length > 0 && dayTasks.every(t => t.completed);
+    if (allCompleted) {
+      activeDates.add(dateStr);
+    }
+  });
 
   const getLocalDateStr = (d) => {
     const year = d.getFullYear();
@@ -27,8 +41,8 @@ const calculateUserStreak = async (userId) => {
   const todayStr = getLocalDateStr(new Date());
   const yesterdayStr = getLocalDateStr(new Date(Date.now() - 86400000));
 
-  const hasToday = datesSet.has(todayStr);
-  const hasYesterday = datesSet.has(yesterdayStr);
+  const hasToday = activeDates.has(todayStr);
+  const hasYesterday = activeDates.has(yesterdayStr);
 
   if (!hasToday && !hasYesterday) {
     return 0;
@@ -42,7 +56,7 @@ const calculateUserStreak = async (userId) => {
   let streakCount = 0;
   while (true) {
     const checkDateStr = getLocalDateStr(currentCheckDate);
-    if (datesSet.has(checkDateStr)) {
+    if (activeDates.has(checkDateStr)) {
       streakCount++;
       currentCheckDate.setDate(currentCheckDate.getDate() - 1);
     } else {

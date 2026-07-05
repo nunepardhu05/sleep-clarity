@@ -234,16 +234,28 @@ export const MockServices = {
   
   calculateStreakFromTasks: () => {
     const tasks = getFromStorage(KEYS.TASKS);
-    const completedTasks = tasks.filter(t => t.completed && t.date);
-    
-    if (completedTasks.length === 0) {
+    if (tasks.length === 0) {
       return 0;
     }
 
-    const uniqueDates = Array.from(new Set(completedTasks.map(t => t.date)));
-    uniqueDates.sort((a, b) => new Date(b) - new Date(a));
-    
-    const datesSet = new Set(uniqueDates);
+    const tasksByDate = {};
+    tasks.forEach(t => {
+      if (!t.date) return;
+      if (!tasksByDate[t.date]) {
+        tasksByDate[t.date] = [];
+      }
+      tasksByDate[t.date].push(t);
+    });
+
+    const activeDates = new Set();
+    Object.keys(tasksByDate).forEach(dateStr => {
+      const dayTasks = tasksByDate[dateStr];
+      const allCompleted = dayTasks.length > 0 && dayTasks.every(t => t.completed);
+      if (allCompleted) {
+        activeDates.add(dateStr);
+      }
+    });
+
     const getLocalDateStr = (d) => {
       const year = d.getFullYear();
       const month = String(d.getMonth() + 1).padStart(2, '0');
@@ -254,8 +266,8 @@ export const MockServices = {
     const todayStr = getLocalDateStr(new Date());
     const yesterdayStr = getLocalDateStr(new Date(Date.now() - 86400000));
     
-    const hasToday = datesSet.has(todayStr);
-    const hasYesterday = datesSet.has(yesterdayStr);
+    const hasToday = activeDates.has(todayStr);
+    const hasYesterday = activeDates.has(yesterdayStr);
     
     if (!hasToday && !hasYesterday) {
       return 0;
@@ -269,7 +281,7 @@ export const MockServices = {
     let streakCount = 0;
     while (true) {
       const checkDateStr = getLocalDateStr(currentCheckDate);
-      if (datesSet.has(checkDateStr)) {
+      if (activeDates.has(checkDateStr)) {
         streakCount++;
         currentCheckDate.setDate(currentCheckDate.getDate() - 1);
       } else {
