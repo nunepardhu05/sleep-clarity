@@ -247,6 +247,30 @@ const LoginPage = () => {
     }
   };
 
+  // Handle Sign Up Email Submit (Sends verification email)
+  const handleSignUpEmailSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email || !emailRegex.test(email.trim())) {
+      setError('Invalid email address.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const tempPass = `TempPass_${Math.random().toString(36).slice(-8)}${Date.now().toString().slice(-4)}!`;
+      localStorage.setItem('sleep_clarity_temp_register_pass', tempPass);
+      await registerWithEmail(email.trim(), tempPass);
+      setStep('verify');
+    } catch (err) {
+      setError(err.message || 'Registration failed. This email may already be in use.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Step 1 Sign Up Details Submit
   const handleSignUpSetupSubmit = (e) => {
     e.preventDefault();
@@ -575,7 +599,7 @@ const LoginPage = () => {
                 Step 2 of 3: Provide your email address to verify your account.
               </p>
 
-              <form onSubmit={handleEmailSubmit} className="space-y-4">
+              <form onSubmit={handleSignUpEmailSubmit} className="space-y-4">
                 <div>
                   <label className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 block mb-1.5 uppercase tracking-wider">Email Address</label>
                   <input

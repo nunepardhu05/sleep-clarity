@@ -95,6 +95,12 @@ class MockAuthInstance {
 
   async signInWithEmailAndPassword(email, password) {
     console.log(`[Mock Mode] Signing in with email: ${email}`);
+    
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email || !emailRegex.test(email.trim())) {
+      throw new Error('The email address is badly formatted.');
+    }
+
     const accounts = JSON.parse(localStorage.getItem('sleep_clarity_mock_accounts') || '{}');
     if (accounts[email]) {
       if (accounts[email] === password) {
@@ -117,6 +123,12 @@ class MockAuthInstance {
 
   async createUserWithEmailAndPassword(email, password) {
     console.log(`[Mock Mode] Creating account with email: ${email}`);
+    
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email || !emailRegex.test(email.trim())) {
+      throw new Error('The email address is badly formatted.');
+    }
+
     const accounts = JSON.parse(localStorage.getItem('sleep_clarity_mock_accounts') || '{}');
     accounts[email] = password;
     localStorage.setItem('sleep_clarity_mock_accounts', JSON.stringify(accounts));
