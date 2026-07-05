@@ -67,6 +67,35 @@ const calculateUserStreak = async (userId) => {
   return streakCount;
 };
 
+// GET check if email exists (Public Route)
+router.get('/check-email', async (req, res) => {
+  const { email } = req.query;
+  if (!email) return res.status(400).json({ error: 'Email query parameter is required.' });
+
+  try {
+    // 1. Try Firebase Admin if initialized
+    const admin = require('firebase-admin');
+    if (admin.apps.length > 0) {
+      try {
+        await admin.auth().getUserByEmail(email);
+        return res.json({ exists: true });
+      } catch (firebaseErr) {
+        if (firebaseErr.code === 'auth/user-not-found') {
+          return res.json({ exists: false });
+        }
+        console.warn("Firebase Admin check failed, checking MongoDB:", firebaseErr.message);
+      }
+    }
+
+    // 2. Fallback to MongoDB check
+    const exists = await User.exists({ email: email.toLowerCase() });
+    return res.json({ exists: !!exists });
+  } catch (error) {
+    console.error("Error in check-email route:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // GET user profile
 router.get('/profile', verifyToken, async (req, res) => {
   try {
@@ -97,7 +126,7 @@ router.get('/profile', verifyToken, async (req, res) => {
 
 // POST update user profile
 router.post('/profile', verifyToken, async (req, res) => {
-  const { name, sleepTime, wakeTime, goal, monthlyGoals, yearlyGoals } = req.body;
+  const { name, email, sleepTime, wakeTime, goal, monthlyGoals, yearlyGoals } = req.body;
   try {
     let user = await User.findOne({ firebaseUid: req.user.uid });
     
@@ -106,6 +135,7 @@ router.post('/profile', verifyToken, async (req, res) => {
     }
     
     if (name !== undefined) user.name = name;
+    if (email !== undefined) user.email = email.toLowerCase();
     if (sleepTime !== undefined) user.sleepTime = sleepTime;
     if (wakeTime !== undefined) user.wakeTime = wakeTime;
     if (goal !== undefined) user.goal = goal;

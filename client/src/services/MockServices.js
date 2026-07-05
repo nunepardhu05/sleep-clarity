@@ -154,6 +154,23 @@ const getFromStorage = (key) => JSON.parse(localStorage.getItem(key)) || [];
 const saveToStorage = (key, data) => localStorage.setItem(key, JSON.stringify(data));
 
 export const MockServices = {
+  checkEmailExists: async (email) => {
+    if (getMode() === 'fullstack') {
+      try {
+        const res = await fetch(getEndpoint(`/api/users/check-email?email=${encodeURIComponent(email.trim())}`), {
+          method: 'GET',
+          headers: getHeaders()
+        });
+        const data = await res.json();
+        return !!data.exists;
+      } catch (err) {
+        console.error("Error checking email on server:", err);
+      }
+    }
+    const accounts = JSON.parse(localStorage.getItem('sleep_clarity_mock_accounts') || '{}');
+    return !!accounts[email.trim()];
+  },
+
   // PROFILE SERVICES
   getProfile: () => {
     const profile = JSON.parse(localStorage.getItem(KEYS.PROFILE));

@@ -10,6 +10,11 @@ const UserSchema = new mongoose.Schema({
   phone: {
     type: String,
   },
+  email: {
+    type: String,
+    default: '',
+    index: true,
+  },
   name: {
     type: String,
     default: '',

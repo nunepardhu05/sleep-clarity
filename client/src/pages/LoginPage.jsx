@@ -207,8 +207,20 @@ const LoginPage = () => {
           setLoading(false);
         }
       } else {
-        // Sign in flow: transition to password input stage
-        setEmailStage('password');
+        // Sign in flow: transition to password input stage if account exists
+        setLoading(true);
+        try {
+          const exists = await MockServices.checkEmailExists(email.trim());
+          if (!exists) {
+            setError('Account does not exist. Please check your spelling or switch to Sign Up.');
+            return;
+          }
+          setEmailStage('password');
+        } catch (err) {
+          setError('Error checking account existence. Please try again.');
+        } finally {
+          setLoading(false);
+        }
       }
       return;
     }
@@ -260,6 +272,11 @@ const LoginPage = () => {
 
     setLoading(true);
     try {
+      const exists = await MockServices.checkEmailExists(email.trim());
+      if (exists) {
+        setError('This email is already in use. Please sign in instead.');
+        return;
+      }
       const tempPass = `TempPass_${Math.random().toString(36).slice(-8)}${Date.now().toString().slice(-4)}!`;
       localStorage.setItem('sleep_clarity_temp_register_pass', tempPass);
       await registerWithEmail(email.trim(), tempPass);
@@ -329,6 +346,7 @@ const LoginPage = () => {
       
       onboardUser({ 
         name, 
+        email: email || '',
         sleepTime: finalSleep, 
         wakeTime: finalWake,
         monthlyGoals: '',
