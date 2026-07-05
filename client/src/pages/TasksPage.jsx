@@ -149,6 +149,69 @@ const TasksPage = () => {
           setError('Cannot schedule tasks during your sleep time.');
           return;
         }
+
+        // Check overlaps with other tasks (handles midnight-spanning)
+        const allTasks = MockServices.getTasks();
+        const currentTaskDates = [targetDate];
+        if (endMins < startMins) {
+          const nextD = new Date(targetDate + 'T00:00:00');
+          nextD.setDate(nextD.getDate() + 1);
+          currentTaskDates.push(nextD.toISOString().split('T')[0]);
+        }
+
+        const isEditing = editingTask !== null;
+
+        const getTaskRangeOnDate = (tsk, dateStr) => {
+          if (!tsk.startTime || !tsk.endTime) return null;
+          const sMins = toMins(tsk.startTime);
+          const eMins = toMins(tsk.endTime);
+          const crosses = eMins < sMins;
+          
+          if (tsk.date === dateStr) {
+            return crosses ? { start: sMins, end: 1440 } : { start: sMins, end: eMins };
+          }
+          
+          const d = new Date(tsk.date + 'T00:00:00');
+          d.setDate(d.getDate() + 1);
+          const nextDateStr = d.toISOString().split('T')[0];
+          
+          if (nextDateStr === dateStr && crosses) {
+            return { start: 0, end: eMins };
+          }
+          
+          return null;
+        };
+
+        const doRangesOverlap = (r1, r2) => {
+          if (!r1 || !r2) return false;
+          return r1.start < r2.end && r2.start < r1.end;
+        };
+
+        for (const t of allTasks) {
+          if (isEditing && t.id === editingTask.id) continue;
+          if (!t.startTime || !t.endTime) continue;
+
+          const tStartM = toMins(t.startTime);
+          const tEndM = toMins(t.endTime);
+          const tDates = [t.date];
+          if (tEndM < tStartM) {
+            const nextD = new Date(t.date + 'T00:00:00');
+            nextD.setDate(nextD.getDate() + 1);
+            tDates.push(nextD.toISOString().split('T')[0]);
+          }
+
+          const sharedDates = currentTaskDates.filter(d => tDates.includes(d));
+          for (const sharedD of sharedDates) {
+            const tempCurrent = { date: targetDate, startTime: finalStart, endTime: finalEnd };
+            const range1 = getTaskRangeOnDate(tempCurrent, sharedD);
+            const range2 = getTaskRangeOnDate(t, sharedD);
+
+            if (doRangesOverlap(range1, range2)) {
+              setError(`This time slot overlaps with task: "${t.title}" (${formatTimeTo12Hour(t.startTime)} - ${formatTimeTo12Hour(t.endTime)}).`);
+              return;
+            }
+          }
+        }
       }
     }
 
