@@ -115,7 +115,7 @@ const Dashboard = () => {
     <div className="space-y-6 md:space-y-8">
       
       {/* 1. GREETING HERO CARD */}
-      <div className="glass-premium rounded-3xl p-6 md:p-8 border border-slate-200 dark:border-slate-800/80 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative overflow-hidden">
+      <div className="glass-premium rounded-3xl p-6 md:p-8 border border-slate-200 dark:border-slate-800/80 flex flex-col justify-between items-start gap-6 relative overflow-hidden">
         {/* Glow behind greeting */}
         <div className="absolute right-0 top-0 w-48 h-48 bg-indigoCalm-500/10 dark:bg-indigoCalm-500/10 rounded-full blur-3xl pointer-events-none"></div>
         
@@ -127,28 +127,6 @@ const Dashboard = () => {
           <p className="text-xs md:text-sm text-slate-500 dark:text-slate-400 max-w-xl font-light">
             {t('settingsSub')}
           </p>
-        </div>
-
-        {/* Dynamic actions reminder badge */}
-        <div className="flex flex-wrap gap-2.5">
-          <div className="px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-850 flex items-center gap-2">
-            <Clock className="w-4 h-4 text-indigoCalm-500" />
-            <span className="text-xs font-semibold">{t('wakeTarget')}: {formatTimeTo12Hour(profile?.wakeTime || '07:00')}</span>
-          </div>
-          {journalCompleted ? (
-            <div className="px-3.5 py-2 rounded-xl bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/20 flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4" />
-              <span className="text-xs font-semibold">{t('completed')}</span>
-            </div>
-          ) : (
-            <Link 
-              to="/journal" 
-              className="px-3.5 py-2 rounded-xl bg-dawn-500/10 text-dawn-600 dark:text-dawn-400 border border-dawn-500/20 flex items-center gap-2 hover:bg-dawn-500/15 transition-colors"
-            >
-              <AlertCircle className="w-4 h-4 animate-bounce" />
-              <span className="text-xs font-semibold">{t('saveEntry')}</span>
-            </Link>
-          )}
         </div>
       </div>
 
