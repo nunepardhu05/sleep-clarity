@@ -122,8 +122,15 @@ const CalendarPage = () => {
     calendarCells.push({ day, currentMonth: false, dateStr });
   }
 
-  // Get tasks for selected date
-  const selectedDateTasks = tasks.filter(t => t.date === selectedDateStr);
+  // Get tasks for selected date (handles midnight-spanning)
+  const getSortTime = (task, tDate) => {
+    if (task.date === tDate) {
+      return task.startTime || '99:99';
+    }
+    return '00:00';
+  };
+  const selectedDateTasks = MockServices.getTasksByDate(selectedDateStr);
+  selectedDateTasks.sort((a, b) => getSortTime(a, selectedDateStr).localeCompare(getSortTime(b, selectedDateStr)));
 
   const handleCreateEvent = (e) => {
     e.preventDefault();

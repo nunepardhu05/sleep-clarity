@@ -4,17 +4,49 @@ const router = express.Router();
 const Task = require('../models/Task');
 const verifyToken = require('../middleware/auth');
 
-// GET all tasks (with date filter support)
+// GET all tasks (with date filter support and midnight-spanning query)
 router.get('/', verifyToken, async (req, res) => {
   const { date } = req.query;
   const filter = { userId: req.user.uid };
   
   if (date) {
-    filter.date = date;
+    const getPrevDateStr = (dStr) => {
+      const d = new Date(dStr + 'T00:00:00');
+      d.setDate(d.getDate() - 1);
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    };
+    
+    const prevDateStr = getPrevDateStr(date);
+    filter.$or = [
+      { date: date },
+      {
+        date: prevDateStr,
+        startTime: { $ne: '', $exists: true },
+        endTime: { $ne: '', $exists: true },
+        $expr: { $lt: ["$endTime", "$startTime"] }
+      }
+    ];
   }
 
   try {
-    const tasks = await Task.find(filter).sort({ startTime: 1 });
+    const tasks = await Task.find(filter);
+    
+    // Sort tasks. Spanning tasks from yesterday start at 00:00 on the queried date.
+    if (date) {
+      const getSortTime = (task, tDate) => {
+        if (task.date === tDate) {
+          return task.startTime || '99:99';
+        }
+        return '00:00';
+      };
+      tasks.sort((a, b) => getSortTime(a, date).localeCompare(getSortTime(b, date)));
+    } else {
+      tasks.sort((a, b) => (a.startTime || '').localeCompare(b.startTime || ''));
+    }
+
     res.json(tasks);
   } catch (error) {
     res.status(500).json({ error: error.message });

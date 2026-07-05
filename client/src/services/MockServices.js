@@ -323,7 +323,25 @@ export const MockServices = {
 
   getTasksByDate: (dateStr) => {
     const all = MockServices.getTasks();
-    return all.filter(t => t.date === dateStr);
+    
+    const getPrevDateStr = (dStr) => {
+      const d = new Date(dStr + 'T00:00:00');
+      d.setDate(d.getDate() - 1);
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    };
+
+    const prevDateStr = getPrevDateStr(dateStr);
+    
+    return all.filter(t => {
+      if (t.date === dateStr) return true;
+      if (t.date === prevDateStr && t.startTime && t.endTime && t.endTime < t.startTime) {
+        return true;
+      }
+      return false;
+    });
   },
 
   addTask: (task) => {

@@ -69,11 +69,17 @@ const TasksPage = () => {
   const loadTasks = () => {
     const targetDate = activeTab === 'today' ? todayStr : tomorrowStr;
     const list = MockServices.getTasksByDate(targetDate);
-    // Sort tasks chronologically by start time
-    list.sort((a, b) => a.startTime.localeCompare(b.startTime));
+    
+    // Sort tasks chronologically. Spanning tasks from yesterday start at 00:00 today.
+    const getSortTime = (task, tDate) => {
+      if (task.date === tDate) {
+        return task.startTime || '99:99';
+      }
+      return '00:00';
+    };
+    
+    list.sort((a, b) => getSortTime(a, targetDate).localeCompare(getSortTime(b, targetDate)));
     setTasks(list);
-
-
   };
 
   const handleCreateTask = (e) => {
@@ -244,16 +250,34 @@ const TasksPage = () => {
 
   const timelineHours = getTimelineHours();
 
-  // Find tasks mapping to an hour block
+  // Find tasks mapping to an hour block (handles midnight-spanning)
   const getTaskForHour = (hourStr) => {
     const hrVal = parseInt(hourStr.split(':')[0]);
+    const targetDate = activeTab === 'today' ? todayStr : tomorrowStr;
     
-    return tasks.find(t => {
-      if (!t.startTime || !t.endTime) return false;
-      const startHr = parseInt(t.startTime.split(':')[0]);
-      const endHr = parseInt(t.endTime.split(':')[0]);
-      return hrVal >= startHr && hrVal < endHr;
-    });
+    const isTaskActiveAtHour = (task, dateStr, hour) => {
+      if (!task.startTime || !task.endTime) return false;
+      const startHr = parseInt(task.startTime.split(':')[0]);
+      const endHr = parseInt(task.endTime.split(':')[0]);
+      
+      if (task.endTime >= task.startTime) {
+        if (task.date !== dateStr) return false;
+        return hour >= startHr && hour < endHr;
+      }
+      
+      const d = new Date(task.date + 'T00:00:00');
+      d.setDate(d.getDate() + 1);
+      const nextDateStr = d.toISOString().split('T')[0];
+      
+      if (task.date === dateStr) {
+        return hour >= startHr;
+      } else if (nextDateStr === dateStr) {
+        return hour < endHr;
+      }
+      return false;
+    };
+    
+    return tasks.find(t => isTaskActiveAtHour(t, targetDate, hrVal));
   };
 
   return (
