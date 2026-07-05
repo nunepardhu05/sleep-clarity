@@ -363,14 +363,6 @@ const Layout = ({ children }) => {
                 <span className="absolute top-2 right-2 w-2.5 h-2.5 rounded-full bg-dawn-500 border-2 border-slate-50 dark:border-[#0a0c18]"></span>
               )}
             </button>
-
-            <div className="h-6 w-[1px] bg-slate-200 dark:bg-slate-800"></div>
-
-            {/* Onboarding goals hint */}
-            <div className="text-right hidden lg:block">
-              <span className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold block">PRODUCTIVITY TARGET</span>
-              <span className="text-xs font-medium text-indigoCalm-600 dark:text-indigoCalm-400 block max-w-[200px] truncate">{profile?.goal || 'No goal set'}</span>
-            </div>
           </div>
         </header>
 
