@@ -5,7 +5,7 @@ import { MockServices } from '../services/MockServices';
 import { Moon, Shield, ArrowRight, Smartphone, Clock, Sparkles, Eye, EyeOff } from 'lucide-react';
 
 const LoginPage = () => {
-  const { user, profile, sendOTP, loginWithEmail, registerWithEmail, onboardUser, isMockMode, sendVerificationEmail, reloadUser, logout, updateUserPassword, sendPasswordReset, simulateMockVerification } = useAuth();
+  const { user, profile, sendOTP, loginWithEmail, loginWithGoogle, registerWithEmail, onboardUser, isMockMode, sendVerificationEmail, reloadUser, logout, updateUserPassword, sendPasswordReset, simulateMockVerification } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -77,14 +77,21 @@ const LoginPage = () => {
   // Automatically check authentication redirection on state updates
   useEffect(() => {
     if (user) {
-      if (user.email && !user.emailVerified) {
+      const isGoogle = (user.uid && user.uid.startsWith('mock-google-')) || 
+                      (user.providerData && user.providerData.some(p => p.providerId === 'google.com'));
+
+      if (user.email && !user.emailVerified && !isGoogle) {
         setStep('verify');
       } else {
         const profileData = MockServices.getProfile();
         if (profileData && profileData.name) {
           navigate('/dashboard');
         } else {
-          setStep('password-setup');
+          if (isGoogle) {
+            setStep('signup-setup');
+          } else {
+            setStep('password-setup');
+          }
         }
       }
     }
@@ -259,6 +266,18 @@ const LoginPage = () => {
     }
   };
 
+  const handleGoogleSignIn = async () => {
+    setError('');
+    setLoading(true);
+    try {
+      await loginWithGoogle();
+    } catch (err) {
+      setError(err.message || 'Google Sign-In failed.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Handle Sign Up Email Submit (Sends verification email)
   const handleSignUpEmailSubmit = async (e) => {
     e.preventDefault();
@@ -313,7 +332,22 @@ const LoginPage = () => {
       return;
     }
 
-    setStep('signup-email');
+    const isGoogle = user && ((user.uid && user.uid.startsWith('mock-google-')) || 
+                      (user.providerData && user.providerData.some(p => p.providerId === 'google.com')));
+
+    if (isGoogle) {
+      onboardUser({ 
+        name, 
+        email: user.email || '',
+        sleepTime: finalSleep, 
+        wakeTime: finalWake,
+        monthlyGoals: '',
+        yearlyGoals: ''
+      });
+      navigate('/dashboard');
+    } else {
+      setStep('signup-email');
+    }
   };
 
   // Step 4 Password Setup Submit
@@ -468,6 +502,31 @@ const LoginPage = () => {
                   {loading ? 'Processing...' : (emailStage === 'email' ? 'Next' : 'Sign In')}
                   <ArrowRight className="w-4 h-4" />
                 </button>
+
+                {emailStage === 'email' && (
+                  <>
+                    <div className="flex items-center my-4">
+                      <div className="flex-1 border-t border-slate-200 dark:border-slate-800"></div>
+                      <span className="px-3 text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500 tracking-widest">or</span>
+                      <div className="flex-1 border-t border-slate-200 dark:border-slate-800"></div>
+                    </div>
+                    
+                    <button
+                      type="button"
+                      onClick={handleGoogleSignIn}
+                      disabled={loading}
+                      className="w-full py-3.5 bg-white dark:bg-[#12162a]/45 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-250 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2.5 hover:bg-slate-100/50 dark:hover:bg-slate-900/60 shadow-sm"
+                    >
+                      <svg className="w-4 h-4" viewBox="0 0 24 24" width="24" height="24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M21.35,11.1H12v2.7h5.38c-0.24,1.28 -0.96,2.37 -2.04,3.1v2.56h3.29c1.92,-1.78 3.02,-4.39 3.02,-7.37c0,-0.61 -0.05,-1.19 -0.16,-1.7Z" fill="#4285F4" />
+                        <path d="M12,20.62c2.43,0 4.47,-0.81 5.96,-2.18l-2.92,-2.27c-0.81,0.54 -1.85,0.87 -3.04,0.87c-2.34,0 -4.32,-1.58 -5.03,-3.7H3.88v2.33c1.48,2.94 4.53,4.95 8.12,4.95Z" fill="#34A853" />
+                        <path d="M6.97,13.34a5.21,5.21 0 0,1 -0.27,-1.64c0,-0.57 0.1,-1.13 0.27,-1.64V7.73H3.88a8.88,8.88 0 0,0 0,8.54l3.09,-2.93Z" fill="#FBBC05" />
+                        <path d="M12,6.08c1.32,0 2.51,0.45 3.44,1.35l2.58,-2.58C16.46,3.37 14.42,2.62 12,2.62c-3.59,0 -6.64,2.01 -8.12,4.95l3.09,2.93c0.71,-2.12 2.69,-3.7 5.03,-3.7Z" fill="#EA4335" />
+                      </svg>
+                      Continue with Google
+                    </button>
+                  </>
+                )}
 
                 {emailStage === 'email' ? (
                   <button
